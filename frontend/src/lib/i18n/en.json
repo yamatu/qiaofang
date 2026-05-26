@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "Home",
+    "about": "About",
+    "products": "Products",
+    "certificates": "Certifications",
+    "news": "News",
+    "careers": "Careers",
+    "contact": "Contact"
+  },
+  "hero": {
+    "explore": "Explore Products",
+    "contactExpert": "Contact Expert"
+  },
+  "applications": {
+    "title": "Core Applications",
+    "desc": "With cutting-edge manufacturing and innovative R&D, our precision components empower the world's most promising tech industries.",
+    "explore": "Explore Solutions",
+    "consumer": "Consumer Electronics",
+    "consumerDesc": "High-precision, high-reliability electronic components and connectivity solutions for smart living.",
+    "fiveG": "5G Base Stations",
+    "fiveGDesc": "Stable and efficient signal and power transmission support for 5G infrastructure.",
+    "ev": "New Energy Vehicles",
+    "evDesc": "Automotive-grade core connection components driving green mobility.",
+    "scooter": "Electric Scooters",
+    "scooterDesc": "Durable, waterproof, lightweight custom solutions for micro-mobility."
+  },
+  "certs": {
+    "title": "Honors & Certifications",
+    "desc": "We uphold quality as our lifeline, with multiple international certifications providing solid quality assurance.",
+    "viewAll": "View All Certificates",
+    "ul": "UL Certification",
+    "ulDesc": "Outstanding quality meeting international safety standards",
+    "qc": "QC080000",
+    "qcDesc": "Hazardous substance process management system",
+    "iso": "ISO9001",
+    "isoDesc": "International quality management system"
+  },
+  "about": {
+    "title": "About Qiao Fang Technology",
+    "subtitle": "Precision Manufacturing, Connecting the Future",
+    "intro": "Founded in 2016, Kunshan Qiao Fang Electronics Technology Co., Ltd. specializes in R&D and manufacturing of electronic components, precision connectors, and supporting cables. Located in Kunshan, Jiangsu Province, with modern production facilities and a professional R&D team.",
+    "mission": "Our Mission",
+    "missionText": "Centered on precision manufacturing, providing highly reliable electronic interconnection solutions for global customers.",
+    "vision": "Our Vision",
+    "visionText": "To become a globally leading supplier of precision connectors and electronic components, driving industry innovation.",
+    "values": "Core Values",
+    "valuesText": "Quality First, Innovation Driven, Customer Oriented, Win-Win Cooperation",
+    "history": "Our History",
+    "team": "Professional Team",
+    "teamDesc": "50+ experienced engineers and technicians",
+    "factory": "Production Base",
+    "factoryDesc": "5000㎡ modern workshop with advanced equipment"
+  },
+  "products": {
+    "title": "Products",
+    "subtitle": "High-quality precision connectivity solutions for global customers",
+    "allCategories": "All Categories",
+    "viewDetail": "View Details",
+    "specs": "Specifications",
+    "related": "Related Products",
+    "noProducts": "No products available"
+  },
+  "news": {
+    "title": "News",
+    "subtitle": "Latest updates from Qiao Fang Technology",
+    "readMore": "Read More",
+    "back": "Back to List",
+    "noNews": "No news available"
+  },
+  "contact": {
+    "title": "Contact Us",
+    "subtitle": "We look forward to cooperating with you",
+    "form": {
+      "name": "Your Name",
+      "email": "Email",
+      "phone": "Phone",
+      "company": "Company",
+      "message": "Message",
+      "submit": "Submit",
+      "success": "Message sent! We will contact you soon."
+    },
+    "info": {
+      "address": "Address",
+      "addressText": "No.26 Zhuzhu Road, Lujia Town, Kunshan, Jiangsu, China",
+      "phone": "Phone",
+      "phoneText": "13951186495 (Ext: 1001)",
+      "email": "Email",
+      "emailText": "davey@qiaofangcn.com",
+      "hours": "Business Hours",
+      "hoursText": "Mon - Fri 8:30 - 17:30"
+    }
+  },
+  "footer": {
+    "brand": "Qiao Fang Tech",
+    "brandDesc": "Dedicated to R&D and manufacturing of electronic components, precision connectors, and supporting cables.",
+    "quickLinks": "Quick Links",
+    "contactUs": "Contact Us",
+    "wechat": "WeChat",
+    "wechatScan": "Scan to follow our WeChat account",
+    "copyright": "Copyright © 2026 Kunshan Qiao Fang Electronics Technology Co., Ltd. All rights reserved.",
+    "icp": "苏ICP备17024092号"
+  }
+}

@@ -1,0 +1,19 @@
+# Dependencies
+frontend/node_modules/
+frontend/.next/
+
+# Uploads (runtime data)
+backend/uploads/
+backend/backups/
+
+# Environment
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

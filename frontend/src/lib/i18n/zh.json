@@ -1,0 +1,104 @@
+{
+  "nav": {
+    "home": "首页",
+    "about": "关于我们",
+    "products": "产品中心",
+    "certificates": "荣誉资质",
+    "news": "新闻资讯",
+    "careers": "人才招聘",
+    "contact": "联系我们"
+  },
+  "hero": {
+    "explore": "探索产品",
+    "contactExpert": "联系专家"
+  },
+  "applications": {
+    "title": "核心应用领域",
+    "desc": "凭借尖端制造工艺与创新研发能力，我们的精密组件正深度赋能全球最具潜力的科技产业。",
+    "explore": "探索解决方案",
+    "consumer": "消费类电子产品",
+    "consumerDesc": "高精密、高可靠性的电子元器件及连接方案，助力智能生活。",
+    "fiveG": "5G基站",
+    "fiveGDesc": "为5G通信基础设施提供稳定高效的信号及电力传输支持。",
+    "ev": "新能源汽车",
+    "evDesc": "满足车规级要求的核心连接部件，驱动绿色出行未来。",
+    "scooter": "电动滑板车",
+    "scooterDesc": "耐用、防水、轻量化的定制方案，赋能微出行领域。"
+  },
+  "certs": {
+    "title": "荣誉与资质",
+    "desc": "我们坚持以质量为生命，建立并持续完善全面的质量管理体系。通过多项国际权威认证，为您提供坚实的品质保障。",
+    "viewAll": "查看所有证书",
+    "ul": "UL认证",
+    "ulDesc": "符合国际安全标准的卓越品质",
+    "qc": "QC080000",
+    "qcDesc": "有害物质过程管理体系认证",
+    "iso": "ISO9001",
+    "isoDesc": "国际标准化质量管理体系"
+  },
+  "about": {
+    "title": "关于乔方科技",
+    "subtitle": "精密智造，连接未来",
+    "intro": "昆山乔方电子科技有限公司成立于2016年，专业致力于电子元器件、精密连接器及配套线缆的研发与制造。公司坐落于江苏省昆山市，拥有现代化生产基地和专业研发团队。",
+    "mission": "企业使命",
+    "missionText": "以精密制造为核心，为全球客户提供高可靠性的电子互联解决方案，推动科技产业发展。",
+    "vision": "企业愿景",
+    "visionText": "成为全球领先的精密连接器与电子元器件供应商，引领行业技术创新。",
+    "values": "核心价值观",
+    "valuesText": "品质为本、创新驱动、客户至上、合作共赢",
+    "history": "发展历程",
+    "team": "专业团队",
+    "teamDesc": "拥有50+名经验丰富的工程师和技术人员",
+    "factory": "生产基地",
+    "factoryDesc": "5000㎡现代化生产车间，配备先进设备"
+  },
+  "products": {
+    "title": "产品中心",
+    "subtitle": "为全球客户提供高品质精密连接解决方案",
+    "allCategories": "全部分类",
+    "viewDetail": "查看详情",
+    "specs": "规格参数",
+    "related": "相关产品",
+    "noProducts": "暂无产品"
+  },
+  "news": {
+    "title": "新闻资讯",
+    "subtitle": "了解乔方科技最新动态",
+    "readMore": "阅读全文",
+    "back": "返回列表",
+    "noNews": "暂无新闻"
+  },
+  "contact": {
+    "title": "联系我们",
+    "subtitle": "期待与您的合作",
+    "form": {
+      "name": "您的姓名",
+      "email": "电子邮箱",
+      "phone": "联系电话",
+      "company": "公司名称",
+      "message": "留言内容",
+      "submit": "提交留言",
+      "success": "留言已提交，我们会尽快与您联系！"
+    },
+    "info": {
+      "address": "公司地址",
+      "addressText": "江苏省昆山市陆家镇珠竹路26号 精伦智能A栋",
+      "phone": "联系电话",
+      "phoneText": "13951186495 (分机: 1001)",
+      "email": "电子邮箱",
+      "emailText": "davey@qiaofangcn.com",
+      "hours": "工作时间",
+      "hoursText": "周一至周五 8:30 - 17:30"
+    }
+  },
+  "footer": {
+    "brand": "乔方科技",
+    "brandDesc": "专业致力于电子元器件、精密连接器及配套线缆的研发与制造。",
+    "quickLinks": "快速链接",
+    "contactUs": "联系我们",
+    "wechat": "关注微信",
+    "wechatScan": "扫一扫关注微信",
+    "copyright": "Copyright ©2020 昆山乔方电子科技有限公司",
+    "icp": "苏ICP备17024092号"
+  }
+}

@@ -1,0 +1,89 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Globe, Search, Menu, X } from 'lucide-react';
+import Link from 'next/link';
+import { useI18n } from '@/lib/i18n';
+import api from '@/lib/api';
+import { API_BASE_URL } from '@/lib/constants';
+
+export default function Header() {
+  const { locale, t, toggleLocale } = useI18n();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [logo, setLogo] = useState('');
+
+  useEffect(() => {
+    api.get('/company').then(res => {
+      if (res.data?.logo_url) setLogo(res.data.logo_url);
+    }).catch(() => {});
+  }, []);
+
+  const navLinks = [
+    { name: t.nav.home, href: '/' },
+    { name: t.nav.about, href: '/about' },
+    { name: t.nav.products, href: '/products' },
+    { name: t.nav.certificates, href: '/certificates' },
+    { name: t.nav.news, href: '/news' },
+    { name: t.nav.contact, href: '/contact' },
+  ];
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 20);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <header className={`fixed w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-6'}`}>
+      <div className="container mx-auto px-6 max-w-7xl">
+        <div className="flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2 group">
+            {logo ? (
+              <img src={`${API_BASE_URL}${logo}`} alt="乔方科技" className="h-10 object-contain" />
+            ) : (
+              <>
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-colors duration-500 ${isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-900'}`}>Q</div>
+                <div>
+                  <h1 className={`text-2xl font-bold tracking-tight leading-none transition-colors duration-500 ${isScrolled ? 'text-blue-900' : 'text-white'}`}>乔方</h1>
+                  <span className={`text-xs font-semibold tracking-widest uppercase transition-colors duration-500 ${isScrolled ? 'text-blue-600' : 'text-white/80'}`}>Qiao Fang</span>
+                </div>
+              </>
+            )}
+          </Link>
+          <nav className="hidden md:flex space-x-8 lg:space-x-10">
+            {navLinks.map((link, i) => (
+              <Link key={i} href={link.href} className={`font-medium transition-colors relative group text-sm lg:text-base ${isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}>
+                {link.name}
+                <span className={`absolute -bottom-2 left-0 w-0 h-0.5 transition-all group-hover:w-full ${isScrolled ? 'bg-blue-600' : 'bg-white'}`}></span>
+              </Link>
+            ))}
+          </nav>
+          <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled ? 'text-gray-600' : 'text-white'}`}>
+            <button onClick={toggleLocale} className="flex items-center space-x-1 text-sm font-medium hover:opacity-70 transition-opacity">
+              <Globe size={18} />
+              <span>{locale === 'zh' ? 'EN' : '中文'}</span>
+            </button>
+            <button className="hover:opacity-70 transition-opacity"><Search size={22} /></button>
+          </div>
+          <button className={`md:hidden ${isScrolled ? 'text-gray-900' : 'text-white'}`} onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
+            {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+          </button>
+        </div>
+      </div>
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-gray-100 py-4">
+            <div className="flex flex-col px-6 space-y-4">
+              {navLinks.map((link, i) => (
+                <Link key={i} href={link.href} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 font-medium pb-2 border-b border-gray-50">{link.name}</Link>
+              ))}
+              <button onClick={toggleLocale} className="text-left text-blue-600 font-medium">{locale === 'zh' ? 'Switch to English' : '切换到中文'}</button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </header>
+  );
+}
