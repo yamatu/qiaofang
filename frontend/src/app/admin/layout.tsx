@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  LayoutDashboard, Image, Package, Newspaper, Award,
-  Building2, Database, LogOut, Menu, X, MessageSquare, Tags, Handshake, AppWindow, Settings
+  Image, Package, Newspaper, Award,
+  Building2, Database, LogOut, Menu, X, MessageSquare, Tags, Handshake, AppWindow, Settings, RefreshCw, Cloud
 } from 'lucide-react';
+import { purgeSiteCache } from '@/lib/cache';
 
 const sidebarLinks = [
   { name: '轮播管理', href: '/admin/slides', icon: Image },
@@ -19,6 +20,7 @@ const sidebarLinks = [
   { name: '留言管理', href: '/admin/messages', icon: MessageSquare },
   { name: '公司信息', href: '/admin/company', icon: Building2 },
   { name: '数据备份', href: '/admin/backups', icon: Database },
+  { name: '缓存设置', href: '/admin/cache', icon: Cloud },
   { name: '账号设置', href: '/admin/settings', icon: Settings },
 ];
 
@@ -27,6 +29,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [username, setUsername] = useState('');
+  const [purging, setPurging] = useState(false);
+  const [cacheMessage, setCacheMessage] = useState('');
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -45,6 +49,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     router.push('/admin/login');
+  };
+
+  const handlePurgeCache = async () => {
+    setPurging(true);
+    setCacheMessage('');
+    try {
+      await purgeSiteCache();
+      setCacheMessage('缓存已刷新');
+      setTimeout(() => setCacheMessage(''), 3000);
+    } catch (err: any) {
+      setCacheMessage(err.response?.data?.error || '刷新失败');
+      setTimeout(() => setCacheMessage(''), 5000);
+    } finally {
+      setPurging(false);
+    }
   };
 
   return (
@@ -85,9 +104,18 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <div className="flex-1 flex flex-col min-h-screen">
         <header className="h-16 bg-white border-b border-gray-200 flex items-center px-6 lg:px-8">
           <button className="lg:hidden mr-4" onClick={() => setSidebarOpen(true)}><Menu size={20} /></button>
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-lg font-semibold text-gray-800 flex-1">
             {sidebarLinks.find(l => l.href === pathname)?.name || '控制面板'}
           </h2>
+          {cacheMessage && <span className="hidden sm:inline text-sm text-gray-500 mr-3">{cacheMessage}</span>}
+          <button
+            onClick={handlePurgeCache}
+            disabled={purging}
+            className="inline-flex items-center gap-2 rounded-lg border border-gray-200 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+          >
+            <RefreshCw size={16} className={purging ? 'animate-spin' : ''} />
+            {purging ? '刷新中' : '刷新缓存'}
+          </button>
         </header>
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>

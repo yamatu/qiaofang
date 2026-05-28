@@ -23,8 +23,15 @@ services:
       DB_NAME: qiaofang
       JWT_SECRET: qiaofang-jwt-secret-2026
       PORT: "9580"
+      PUBLIC_DOMAIN: qiaofang.yamatu.xyz
+      CF_Token: ${CF_Token:-}
+      CF_API_TOKEN: ${CF_API_TOKEN:-}
+      CF_Key: ${CF_Key:-}
+      CF_Email: ${CF_Email:-}
+      CF_ZONE_ID: ${CF_ZONE_ID:-}
+      CF_ZONE_NAME: ${CF_ZONE_NAME:-yamatu.xyz}
     ports:
-      - "9580:9580"
+      - "127.0.0.1:9580:9580"
     volumes:
       - uploads:/app/uploads
       - backups:/app/backups
@@ -50,7 +57,7 @@ services:
     environment:
       NEXT_PUBLIC_API_URL: /api
     ports:
-      - "4173:3000"
+      - "127.0.0.1:4173:3000"
     depends_on:
       - backend
 

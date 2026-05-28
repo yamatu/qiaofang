@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { purgeSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface App { id: number; title: string; description: string; image_url: string; sort_order: number; }
@@ -14,8 +15,14 @@ export default function ApplicationsPage() {
   const [editing, setEditing] = useState<App | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ title: '', description: '', image_url: '', sort_order: 0 });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
 
-  const fetchItems = async () => { const r = await api.get('/applications'); setItems(r.data || []); };
+  const fetchItems = async () => {
+    const r = await api.get('/applications');
+    setItems(r.data || []);
+  };
   useEffect(() => { fetchItems(); }, []);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,14 +33,44 @@ export default function ApplicationsPage() {
   };
 
   const handleSave = async () => {
-    if (editing) await api.put(`/admin/applications/${editing.id}`, form);
-    else await api.post('/admin/applications', form);
-    setOpen(false); setEditing(null); fetchItems();
+    setSaving(true);
+    setMessage('');
+    setError('');
+    try {
+      if (editing) await api.put(`/admin/applications/${editing.id}`, form);
+      else await api.post('/admin/applications', form);
+      await fetchItems();
+      setOpen(false);
+      setEditing(null);
+      try {
+        await purgeSiteCache(['/', '/api/applications']);
+        setMessage('应用领域已保存，页面缓存已刷新');
+      } catch (cacheErr: any) {
+        setMessage(`应用领域已保存，但缓存刷新失败：${cacheErr.response?.data?.error || '请手动刷新缓存'}`);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || '保存失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
-    await api.delete(`/admin/applications/${id}`); fetchItems();
+    setMessage('');
+    setError('');
+    try {
+      await api.delete(`/admin/applications/${id}`);
+      await fetchItems();
+      try {
+        await purgeSiteCache(['/', '/api/applications']);
+        setMessage('应用领域已删除，页面缓存已刷新');
+      } catch (cacheErr: any) {
+        setMessage(`应用领域已删除，但缓存刷新失败：${cacheErr.response?.data?.error || '请手动刷新缓存'}`);
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.error || '删除失败，请稍后重试');
+    }
   };
 
   const openEdit = (item: App) => {
@@ -51,6 +88,8 @@ export default function ApplicationsPage() {
           <Plus size={18} /> 新增
         </button>
       </div>
+      {error && <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>}
+      {message && <div className="mb-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">{message}</div>}
       <div className="grid gap-4">
         {items.map((item, i) => (
           <motion.div key={item.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
@@ -100,7 +139,7 @@ export default function ApplicationsPage() {
             </div>
             <div className="flex justify-end gap-3 mt-6">
               <Dialog.Close className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">取消</Dialog.Close>
-              <button onClick={handleSave} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">保存</button>
+              <button onClick={handleSave} disabled={saving || !form.title.trim()} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">{saving ? '保存中...' : '保存'}</button>
             </div>
           </Dialog.Content>
         </Dialog.Portal>

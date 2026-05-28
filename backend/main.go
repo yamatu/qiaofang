@@ -40,7 +40,11 @@ func main() {
 
 	r := gin.Default()
 	r.Use(func(c *gin.Context) {
-		c.Header("Content-Type", "application/json; charset=utf-8")
+		if len(c.Request.URL.Path) >= 4 && c.Request.URL.Path[:4] == "/api" {
+			c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+			c.Header("Pragma", "no-cache")
+			c.Header("Expires", "0")
+		}
 		c.Next()
 	})
 	r.Use(cors.New(cors.Config{
@@ -103,6 +107,9 @@ func main() {
 			admin.POST("/applications", h.CreateApplication)
 			admin.PUT("/applications/:id", h.UpdateApplication)
 			admin.DELETE("/applications/:id", h.DeleteApplication)
+			admin.GET("/cache/config", h.GetCacheConfig)
+			admin.PUT("/cache/config", h.SaveCacheConfig)
+			admin.POST("/cache/purge", h.PurgeCache)
 		}
 	}
 
@@ -202,6 +209,11 @@ func initDB(db *sql.DB) {
 		description TEXT,
 		image_url VARCHAR(500),
 		sort_order INT DEFAULT 0
+	);
+	CREATE TABLE IF NOT EXISTS site_settings (
+		key VARCHAR(100) PRIMARY KEY,
+		value TEXT NOT NULL DEFAULT '',
+		updated_at TIMESTAMP DEFAULT NOW()
 	);
 	`
 	if _, err := db.Exec(schema); err != nil {

@@ -3,8 +3,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . .
-RUN CGO_ENABLED=0 go build -o server .
-RUN CGO_ENABLED=0 go build -o seed ./cmd/seed/
+RUN CGO_ENABLED=0 go build -tags nomsgpack -p 1 -o server .
+RUN CGO_ENABLED=0 go build -tags nomsgpack -p 1 -o seed ./cmd/seed/
 
 FROM alpine:3.21
 RUN apk add --no-cache postgresql16-client
