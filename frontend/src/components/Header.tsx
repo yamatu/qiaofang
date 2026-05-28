@@ -13,11 +13,18 @@ export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [logo, setLogo] = useState('');
+  const [companyLoaded, setCompanyLoaded] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     api.get('/company').then(res => {
-      if (res.data?.logo_url) setLogo(res.data.logo_url);
-    }).catch(() => {});
+      if (mounted && res.data?.logo_url) setLogo(res.data.logo_url);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCompanyLoaded(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const navLinks = [
@@ -42,7 +49,7 @@ export default function Header() {
           <Link href="/" className="flex items-center gap-2 group">
             {logo ? (
               <img src={`${API_BASE_URL}${logo}`} alt="乔方科技" className="h-10 object-contain" />
-            ) : (
+            ) : companyLoaded ? (
               <>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-colors duration-500 ${isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-900'}`}>Q</div>
                 <div>
@@ -50,6 +57,8 @@ export default function Header() {
                   <span className={`text-xs font-semibold tracking-widest uppercase transition-colors duration-500 ${isScrolled ? 'text-blue-600' : 'text-white/80'}`}>Qiao Fang</span>
                 </div>
               </>
+            ) : (
+              <div className="h-10 w-32 rounded-lg bg-white/15" />
             )}
           </Link>
           <nav className="hidden md:flex space-x-8 lg:space-x-10">

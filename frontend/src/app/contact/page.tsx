@@ -17,11 +17,18 @@ export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<{address?: string; phone?: string; email?: string}>({});
+  const [companyLoaded, setCompanyLoaded] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     api.get('/company').then(res => {
-      if (res.data && Object.keys(res.data).length > 0) setCompanyInfo(res.data);
-    }).catch(() => {});
+      if (mounted && res.data && Object.keys(res.data).length > 0) setCompanyInfo(res.data);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCompanyLoaded(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,9 +42,9 @@ export default function ContactPage() {
   };
 
   const infoItems = [
-    { icon: MapPin, label: t.contact.info.address, value: companyInfo.address || t.contact.info.addressText },
-    { icon: Phone, label: t.contact.info.phone, value: companyInfo.phone || t.contact.info.phoneText },
-    { icon: Mail, label: t.contact.info.email, value: companyInfo.email || t.contact.info.emailText },
+    { icon: MapPin, label: t.contact.info.address, value: companyInfo.address || (companyLoaded ? t.contact.info.addressText : '') },
+    { icon: Phone, label: t.contact.info.phone, value: companyInfo.phone || (companyLoaded ? t.contact.info.phoneText : '') },
+    { icon: Mail, label: t.contact.info.email, value: companyInfo.email || (companyLoaded ? t.contact.info.emailText : '') },
     { icon: Clock, label: t.contact.info.hours, value: t.contact.info.hoursText },
   ];
 

@@ -18,11 +18,18 @@ interface CompanyInfo {
 export default function Footer() {
   const { t } = useI18n();
   const [info, setInfo] = useState<CompanyInfo>({});
+  const [companyLoaded, setCompanyLoaded] = useState(false);
 
   useEffect(() => {
+    let mounted = true;
     api.get('/company').then(res => {
-      if (res.data && Object.keys(res.data).length > 0) setInfo(res.data);
-    }).catch(() => {});
+      if (mounted && res.data && Object.keys(res.data).length > 0) setInfo(res.data);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCompanyLoaded(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -33,11 +40,13 @@ export default function Footer() {
             <div className="flex items-center gap-2">
               {info.logo_url ? (
                 <img src={`${API_BASE_URL}${info.logo_url}`} alt="乔方科技" className="h-12 object-contain" />
-              ) : (
+              ) : companyLoaded ? (
                 <>
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">Q</div>
                   <h2 className="text-2xl font-bold text-white tracking-tight">{t.footer.brand}</h2>
                 </>
+              ) : (
+                <div className="h-12 w-36 rounded-lg bg-white/10 animate-pulse" />
               )}
             </div>
             <p className="text-sm text-gray-400 leading-relaxed">{t.footer.brandDesc}</p>
@@ -55,9 +64,9 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold text-lg mb-6">{t.footer.contactUs}</h4>
             <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3"><MapPin size={18} className="text-blue-500 flex-shrink-0 mt-0.5" /><span>{info.address || '江苏省昆山市陆家镇珠竹路26号精伦智创园A栋'}</span></li>
-              <li className="flex items-center gap-3"><Phone size={18} className="text-blue-500 flex-shrink-0" /><span>{info.phone || '13951186495'}</span></li>
-              <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500 flex-shrink-0" /><span>{info.email || 'davey@qiaofangcn.com'}</span></li>
+              <li className="flex items-start gap-3"><MapPin size={18} className="text-blue-500 flex-shrink-0 mt-0.5" /><span>{info.address || (companyLoaded ? '江苏省昆山市陆家镇珠竹路26号精伦智创园A栋' : '')}</span></li>
+              <li className="flex items-center gap-3"><Phone size={18} className="text-blue-500 flex-shrink-0" /><span>{info.phone || (companyLoaded ? '13951186495' : '')}</span></li>
+              <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500 flex-shrink-0" /><span>{info.email || (companyLoaded ? 'davey@qiaofangcn.com' : '')}</span></li>
               <li className="text-xs text-gray-500 pt-2">供应商自荐邮箱:<br/>andy.ding@qiaofangcn.com<br/>hedy.zhang@qiaofangcn.com</li>
             </ul>
           </div>
@@ -67,10 +76,12 @@ export default function Footer() {
               <div className="bg-white p-2 rounded-lg inline-block">
                 <img src={`${API_BASE_URL}${info.wechat_qr}`} alt="微信二维码" className="w-24 h-24 object-contain" />
               </div>
-            ) : (
+            ) : companyLoaded ? (
               <div className="bg-white p-2 rounded-lg inline-block">
                 <div className="w-24 h-24 bg-gray-100 flex items-center justify-center text-xs text-gray-400 rounded">QR Code</div>
               </div>
+            ) : (
+              <div className="w-28 h-28 rounded-lg bg-white/10 animate-pulse" />
             )}
             <p className="text-xs text-gray-400 mt-3">{t.footer.wechatScan}</p>
           </div>

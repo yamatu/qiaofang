@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Globe, Search, Menu, X, ArrowRight, Phone, Mail, MapPin,
-  ShieldCheck, Award, Cpu, Wifi, Car, Zap, ChevronRight, ChevronLeft
+  Globe, Search, Menu, X, ArrowRight,
+  Award, Cpu, ChevronRight, ChevronLeft
 } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
@@ -12,50 +12,53 @@ import api from '@/lib/api';
 import { API_BASE_URL } from '@/lib/constants';
 import Footer from '@/components/Footer';
 
-const heroSlidesData = {
-  zh: [
-    { image: '/uploads/hero1.jpg', title: '引领精密智造新纪元', subtitle: 'QIAO FANG TECHNOLOGY', desc: '专注于高可靠性电子元器件与高端连接方案，以极致工艺重塑行业标准。' },
-    { image: '/uploads/hero2.jpg', title: '构建5G万物互联', subtitle: 'FUTURE CONNECTIVITY', desc: '为新一代通信基础设施提供稳定、高效、低损耗的核心信号传输支持。' },
-    { image: '/uploads/hero3.jpg', title: '驱动新能源未来', subtitle: 'GREEN ENERGY MOBILITY', desc: '满足严苛车规级要求的核心连接部件，全面赋能绿色智能出行。' },
-  ],
-  en: [
-    { image: '/uploads/hero1.jpg', title: 'Leading Precision Manufacturing', subtitle: 'QIAO FANG TECHNOLOGY', desc: 'Focused on high-reliability electronic components and premium connectivity solutions.' },
-    { image: '/uploads/hero2.jpg', title: 'Building 5G Connectivity', subtitle: 'FUTURE CONNECTIVITY', desc: 'Providing stable, efficient, low-loss signal transmission for next-gen infrastructure.' },
-    { image: '/uploads/hero3.jpg', title: 'Driving Green Mobility', subtitle: 'GREEN ENERGY MOBILITY', desc: 'Automotive-grade core connection components powering green intelligent travel.' },
-  ],
-};
-
 export default function Home() {
   const { locale, t, toggleLocale } = useI18n();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [dynamicSlides, setDynamicSlides] = useState<{title: string; subtitle: string; description: string; image_url: string}[]>([]);
+  const [slidesLoaded, setSlidesLoaded] = useState(false);
   const [logo, setLogo] = useState('');
+  const [companyLoaded, setCompanyLoaded] = useState(false);
   const [dynamicApps, setDynamicApps] = useState<{id:number;title:string;description:string;image_url:string}[]>([]);
+  const [appsLoaded, setAppsLoaded] = useState(false);
   const [dynamicCerts, setDynamicCerts] = useState<{id:number;title:string;description:string;image_url:string}[]>([]);
+  const [certsLoaded, setCertsLoaded] = useState(false);
   const [certSlide, setCertSlide] = useState(0);
 
   useEffect(() => {
+    let mounted = true;
     api.get('/slides').then(res => {
-      if (res.data && res.data.length > 0) {
+      if (mounted && res.data && res.data.length > 0) {
         setDynamicSlides(res.data.filter((s: {active: boolean}) => s.active));
       }
-    }).catch(() => {});
+    }).catch(() => {}).finally(() => {
+      if (mounted) setSlidesLoaded(true);
+    });
     api.get('/company').then(res => {
-      if (res.data?.logo_url) setLogo(res.data.logo_url);
-    }).catch(() => {});
+      if (mounted && res.data?.logo_url) setLogo(res.data.logo_url);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCompanyLoaded(true);
+    });
     api.get('/applications').then(res => {
-      if (res.data && res.data.length > 0) setDynamicApps(res.data);
-    }).catch(() => {});
+      if (mounted && res.data && res.data.length > 0) setDynamicApps(res.data);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setAppsLoaded(true);
+    });
     api.get('/certificates').then(res => {
-      if (res.data && res.data.length > 0) setDynamicCerts(res.data);
-    }).catch(() => {});
+      if (mounted && res.data && res.data.length > 0) setDynamicCerts(res.data);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCertsLoaded(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const heroSlides = dynamicSlides.length > 0
     ? dynamicSlides.map(s => ({ image: `${API_BASE_URL}${s.image_url}`, title: s.title, subtitle: s.subtitle, desc: s.description }))
-    : heroSlidesData[locale];
+    : [];
   const navLinks = [
     { name: t.nav.home, href: '/' },
     { name: t.nav.about, href: '/about' },
@@ -65,24 +68,13 @@ export default function Home() {
     { name: t.nav.contact, href: '/contact' },
   ];
 
-  const defaultApps = [
-    { icon: <Cpu size={32} />, title: t.applications.consumer, desc: t.applications.consumerDesc, image: '' },
-    { icon: <Wifi size={32} />, title: t.applications.fiveG, desc: t.applications.fiveGDesc, image: '' },
-    { icon: <Car size={32} />, title: t.applications.ev, desc: t.applications.evDesc, image: '' },
-    { icon: <Zap size={32} />, title: t.applications.scooter, desc: t.applications.scooterDesc, image: '' },
-  ];
-
   const applications = dynamicApps.length > 0
     ? dynamicApps.map(a => ({ icon: <Cpu size={32} />, title: a.title, desc: a.description, image: a.image_url ? `${API_BASE_URL}${a.image_url}` : '' }))
-    : defaultApps;
+    : [];
 
   const certificates = dynamicCerts.length > 0
     ? dynamicCerts.map(c => ({ title: c.title, desc: c.description, image: c.image_url }))
-    : [
-        { title: t.certs.ul, desc: t.certs.ulDesc, image: '' },
-        { title: t.certs.qc, desc: t.certs.qcDesc, image: '' },
-        { title: t.certs.iso, desc: t.certs.isoDesc, image: '' },
-      ];
+    : [];
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -91,11 +83,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    if (heroSlides.length === 0) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 5000);
     return () => clearInterval(timer);
   }, [heroSlides.length]);
+
+  const safeCurrentSlide = heroSlides.length > 0 ? Math.min(currentSlide, heroSlides.length - 1) : 0;
 
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
@@ -106,7 +101,7 @@ export default function Home() {
             <Link href="/" className="flex items-center gap-2 group">
               {logo ? (
                 <img src={`${API_BASE_URL}${logo}`} alt="乔方科技" className="h-10 object-contain" />
-              ) : (
+              ) : companyLoaded ? (
                 <>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-colors duration-500 ${isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-900'}`}>Q</div>
                   <div>
@@ -114,6 +109,8 @@ export default function Home() {
                     <span className={`text-xs font-semibold tracking-widest uppercase transition-colors duration-500 ${isScrolled ? 'text-blue-600' : 'text-white/80'}`}>Qiao Fang</span>
                   </div>
                 </>
+              ) : (
+                <div className="h-10 w-32 rounded-lg bg-white/15" />
               )}
             </Link>
             <nav className="hidden md:flex space-x-10">
@@ -153,16 +150,17 @@ export default function Home() {
 
       {/* Hero */}
       <section className="relative h-screen w-full overflow-hidden bg-black">
+        {heroSlides.length > 0 ? (
         <AnimatePresence mode="wait">
-          <motion.div key={currentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }} className="absolute inset-0">
-            <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroSlides[currentSlide].image})` }}></div>
+          <motion.div key={safeCurrentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }} className="absolute inset-0">
+            <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroSlides[safeCurrentSlide].image})` }}></div>
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
             <div className="absolute inset-0 flex items-center">
               <div className="container mx-auto px-6 max-w-7xl">
                 <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3, duration: 0.8 }} className="max-w-3xl">
-                  <div className="inline-block px-5 py-1.5 mb-6 border border-white/30 backdrop-blur-md text-white text-xs md:text-sm font-medium tracking-[0.2em] uppercase rounded-full">{heroSlides[currentSlide].subtitle}</div>
-                  <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] mb-8 tracking-tight">{heroSlides[currentSlide].title}</h2>
-                  <p className="text-xl md:text-2xl text-gray-200 font-light mb-10 max-w-2xl leading-relaxed">{heroSlides[currentSlide].desc}</p>
+                  <div className="inline-block px-5 py-1.5 mb-6 border border-white/30 backdrop-blur-md text-white text-xs md:text-sm font-medium tracking-[0.2em] uppercase rounded-full">{heroSlides[safeCurrentSlide].subtitle}</div>
+                  <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[1.1] mb-8 tracking-tight">{heroSlides[safeCurrentSlide].title}</h2>
+                  <p className="text-xl md:text-2xl text-gray-200 font-light mb-10 max-w-2xl leading-relaxed">{heroSlides[safeCurrentSlide].desc}</p>
                   <div className="flex flex-wrap gap-6">
                     <button className="bg-blue-600 text-white px-10 py-4 rounded-full font-semibold hover:bg-blue-700 transition-all flex items-center gap-3 group text-lg shadow-[0_0_30px_rgba(37,99,235,0.4)]">
                       {t.hero.explore} <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
@@ -174,17 +172,35 @@ export default function Home() {
             </div>
           </motion.div>
         </AnimatePresence>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/30 to-transparent"></div>
+            {!slidesLoaded && (
+            <div className="absolute inset-0 flex items-center">
+              <div className="container mx-auto px-6 max-w-7xl">
+                <div className="max-w-3xl space-y-6">
+                  <div className="h-8 w-48 rounded-full bg-white/10 animate-pulse"></div>
+                  <div className="h-16 w-full max-w-2xl rounded-xl bg-white/10 animate-pulse"></div>
+                  <div className="h-8 w-2/3 rounded-lg bg-white/10 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+            )}
+          </div>
+        )}
         <div className="absolute bottom-10 left-0 w-full z-20">
           <div className="container mx-auto px-6 max-w-7xl flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex gap-3">
               {heroSlides.map((_, i) => (
-                <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 transition-all duration-500 rounded-full ${currentSlide === i ? 'w-12 bg-blue-500' : 'w-4 bg-white/50 hover:bg-white'}`}></button>
+                <button key={i} onClick={() => setCurrentSlide(i)} className={`h-1.5 transition-all duration-500 rounded-full ${safeCurrentSlide === i ? 'w-12 bg-blue-500' : 'w-4 bg-white/50 hover:bg-white'}`}></button>
               ))}
             </div>
+            {heroSlides.length > 0 && (
             <div className="hidden md:flex gap-4">
               <button onClick={() => setCurrentSlide((p) => (p === 0 ? heroSlides.length - 1 : p - 1))} className="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center text-white backdrop-blur-md hover:bg-white hover:text-black transition-all"><ChevronLeft size={24} /></button>
               <button onClick={() => setCurrentSlide((p) => (p + 1) % heroSlides.length)} className="w-14 h-14 rounded-full border border-white/30 flex items-center justify-center text-white backdrop-blur-md hover:bg-white hover:text-black transition-all"><ChevronRight size={24} /></button>
             </div>
+            )}
           </div>
         </div>
       </section>
@@ -201,7 +217,17 @@ export default function Home() {
             <p className="text-zinc-400 max-w-lg text-lg font-light leading-relaxed">{t.applications.desc}</p>
           </motion.div>
           <div className="flex flex-col md:flex-row w-full h-[1000px] md:h-[600px] gap-3 md:gap-4">
-            {applications.map((app, i) => (
+            {!appsLoaded ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="relative flex-1 overflow-hidden rounded-2xl border border-white/10 bg-white/5 animate-pulse">
+                  <div className="absolute bottom-0 left-0 w-full p-6 md:p-8">
+                    <div className="w-16 h-16 rounded-2xl bg-white/10 mb-6"></div>
+                    <div className="h-7 w-32 rounded bg-white/10 mb-4"></div>
+                    <div className="h-4 w-44 rounded bg-white/10"></div>
+                  </div>
+                </div>
+              ))
+            ) : applications.map((app, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="relative flex-1 md:hover:flex-[2.5] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden rounded-2xl group cursor-pointer border border-white/10">
                 <div className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] group-hover:scale-110" style={{ backgroundImage: `url(${app.image})` }}></div>
@@ -244,6 +270,17 @@ export default function Home() {
               )}
             </motion.div>
             <div className="w-full lg:w-2/3 overflow-hidden">
+              {!certsLoaded ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-72 rounded-2xl bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 animate-pulse">
+                      <div className="w-full h-40 rounded-xl bg-gray-100 mb-6"></div>
+                      <div className="h-5 w-2/3 rounded bg-gray-100 mx-auto mb-3"></div>
+                      <div className="h-4 w-full rounded bg-gray-100"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
               <motion.div animate={{ x: `-${certSlide * 33.33}%` }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="flex gap-6" style={{ width: `${Math.max(100, certificates.length * 33.33)}%` }}>
                 {certificates.map((cert, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
@@ -262,6 +299,7 @@ export default function Home() {
                   </motion.div>
                 ))}
               </motion.div>
+              )}
             </div>
           </div>
         </div>
@@ -271,7 +309,3 @@ export default function Home() {
     </div>
   );
 }
-
-
-
-

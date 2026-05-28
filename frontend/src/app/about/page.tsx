@@ -52,9 +52,20 @@ export default function AboutPage() {
   usePageMeta(`${t.nav.about} - 乔方科技`, '昆山乔方电子科技有限公司 - 国家级高新技术企业');
   const [partners, setPartners] = useState<{id:number;name:string;logo_url:string}[]>([]);
   const [aboutImage, setAboutImage] = useState('');
+  const [companyLoaded, setCompanyLoaded] = useState(false);
   useEffect(() => {
-    api.get('/partners').then(r => setPartners(r.data || []));
-    api.get('/company').then(r => { if (r.data?.about_image) setAboutImage(r.data.about_image); });
+    let mounted = true;
+    api.get('/partners').then(r => {
+      if (mounted) setPartners(r.data || []);
+    });
+    api.get('/company').then(r => {
+      if (mounted && r.data?.about_image) setAboutImage(r.data.about_image);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setCompanyLoaded(true);
+    });
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -87,13 +98,15 @@ export default function AboutPage() {
               <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl overflow-hidden">
                 {aboutImage ? (
                   <img src={`${API_BASE_URL}${aboutImage}`} alt="乔方科技" className="w-full h-full object-cover" />
-                ) : (
+                ) : companyLoaded ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
                       <div className="text-6xl font-bold text-blue-600 mb-2">17+</div>
                       <div className="text-gray-600">年行业经验</div>
                     </div>
                   </div>
+                ) : (
+                  <div className="w-full h-full bg-blue-100 animate-pulse" />
                 )}
               </div>
               <motion.div initial={{ scale: 0 }} whileInView={{ scale: 1 }} viewport={{ once: true }} transition={{ delay: 0.3, type: 'spring' }}
