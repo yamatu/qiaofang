@@ -10,10 +10,12 @@ import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
 import api from '@/lib/api';
 import { API_BASE_URL } from '@/lib/constants';
+import { useCompanyInfo } from '@/lib/company';
 import Footer from '@/components/Footer';
 
 export default function Home() {
   const { locale, t, toggleLocale } = useI18n();
+  const { info: companyInfo } = useCompanyInfo();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -117,7 +119,12 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <Link href="/" className="flex items-center gap-2 group">
               {logo ? (
-                <img src={`${API_BASE_URL}${logo}`} alt="乔方科技" className="h-10 object-contain" />
+                <img
+                  src={`${API_BASE_URL}${logo}`}
+                  alt="乔方科技"
+                  className="object-contain"
+                  style={{ width: companyInfo.logo_width ? `${companyInfo.logo_width}px` : undefined, height: companyInfo.logo_height ? `${companyInfo.logo_height}px` : '40px' }}
+                />
               ) : companyLoaded ? (
                 <>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-colors duration-500 ${isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-900'}`}>Q</div>

@@ -6,30 +6,17 @@ import { Globe, Search, Menu, X } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
 import api from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
+import { getAssetUrl, useCompanyInfo } from '@/lib/company';
 
 export default function Header() {
   const { locale, t, toggleLocale } = useI18n();
+  const { info, loaded: companyLoaded } = useCompanyInfo();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [logo, setLogo] = useState('');
-  const [companyLoaded, setCompanyLoaded] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<{type:string;id:number;title:string}[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    api.get('/company').then(res => {
-      if (mounted && res.data?.logo_url) setLogo(res.data.logo_url);
-    }).catch(() => {}).finally(() => {
-      if (mounted) setCompanyLoaded(true);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   useEffect(() => {
     if (searchOpen && searchRef.current) searchRef.current.focus();
@@ -69,8 +56,13 @@ export default function Header() {
       <div className="container mx-auto px-6 max-w-7xl">
         <div className="flex justify-between items-center">
           <Link href="/" className="flex items-center gap-2 group">
-            {logo ? (
-              <img src={`${API_BASE_URL}${logo}`} alt="乔方科技" className="h-10 object-contain" />
+            {info.logo_url ? (
+              <img
+                src={getAssetUrl(info.logo_url)}
+                alt="乔方科技"
+                className="object-contain"
+                style={{ width: info.logo_width ? `${info.logo_width}px` : undefined, height: info.logo_height ? `${info.logo_height}px` : '40px' }}
+              />
             ) : companyLoaded ? (
               <>
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xl transition-colors duration-500 ${isScrolled ? 'bg-blue-600 text-white' : 'bg-white text-blue-900'}`}>Q</div>

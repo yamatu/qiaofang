@@ -10,7 +10,9 @@ export default function CompanyPage() {
   const [form, setForm] = useState({
     about_text: '', phone: '', email: '', address: '',
     wechat_qr: '', logo_url: '', logo_small_url: '',
-    about_image: '', hero_image: ''
+    about_image: '', hero_image: '',
+    logo_width: 0, logo_height: 0,
+    about_banner: '', products_banner: '', certificates_banner: '', news_banner: '', contact_banner: ''
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -58,7 +60,12 @@ export default function CompanyPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">主 Logo（导航栏 / 页脚）</label>
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
               {form.logo_url ? (
-                <img src={`${API_BASE_URL}${form.logo_url}`} alt="Logo" className="h-16 mx-auto object-contain mb-3" />
+                <img
+                  src={`${API_BASE_URL}${form.logo_url}`}
+                  alt="Logo"
+                  className="mx-auto object-contain mb-3"
+                  style={{ width: form.logo_width ? `${form.logo_width}px` : undefined, height: form.logo_height ? `${form.logo_height}px` : '64px' }}
+                />
               ) : (
                 <div className="h-16 flex items-center justify-center text-gray-300 mb-3"><ImageIcon size={32} /></div>
               )}
@@ -67,6 +74,16 @@ export default function CompanyPage() {
                 <input type="file" accept="image/*" onChange={(e) => uploadFile('logo_url', e)} className="hidden" />
               </label>
               <p className="text-xs text-gray-400 mt-2">建议尺寸: 200x60px，透明背景 PNG</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Logo 宽度(px)</label>
+                <input type="number" min="0" value={form.logo_width || ''} onChange={(e) => setForm({...form, logo_width: Number(e.target.value)})} placeholder="自动" className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Logo 高度(px)</label>
+                <input type="number" min="0" value={form.logo_height || ''} onChange={(e) => setForm({...form, logo_height: Number(e.target.value)})} placeholder="默认40" className="w-full px-3 py-2 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
+              </div>
             </div>
           </div>
           <div>
@@ -92,7 +109,7 @@ export default function CompanyPage() {
         <h2 className="text-lg font-semibold text-gray-900 mb-4">页面图片</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">关于我们页面图片</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">关于我们内容图片</label>
             <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
               {form.about_image ? (
                 <img src={`${API_BASE_URL}${form.about_image}`} alt="About" className="h-24 mx-auto object-cover rounded-lg mb-3" />
@@ -103,7 +120,7 @@ export default function CompanyPage() {
                 <Upload size={16} /> 上传图片
                 <input type="file" accept="image/*" onChange={(e) => uploadFile('about_image', e)} className="hidden" />
               </label>
-              <p className="text-xs text-gray-400 mt-2">展示在关于我们页面</p>
+              <p className="text-xs text-gray-400 mt-2">展示在关于我们正文区域</p>
             </div>
           </div>
           <div>
@@ -121,6 +138,32 @@ export default function CompanyPage() {
               <p className="text-xs text-gray-400 mt-2">展示在首页背景区域</p>
             </div>
           </div>
+        </div>
+        <h3 className="text-sm font-semibold text-gray-800 mt-8 mb-3">栏目顶部横幅图</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {[
+            ['about_banner', '关于我们顶部图'],
+            ['products_banner', '产品中心顶部图'],
+            ['certificates_banner', '证书资质顶部图'],
+            ['news_banner', '新闻资讯顶部图'],
+            ['contact_banner', '联系我们顶部图'],
+          ].map(([field, label]) => (
+            <div key={field}>
+              <label className="block text-sm font-medium text-gray-700 mb-2">{label}</label>
+              <div className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center">
+                {form[field as keyof typeof form] ? (
+                  <img src={`${API_BASE_URL}${form[field as keyof typeof form]}`} alt={label} className="h-24 w-full object-cover rounded-lg mb-3" />
+                ) : (
+                  <div className="h-24 flex items-center justify-center text-gray-300 mb-3"><ImageIcon size={32} /></div>
+                )}
+                <label className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-600 rounded-lg cursor-pointer hover:bg-blue-100 text-sm font-medium">
+                  <Upload size={16} /> 上传顶部图
+                  <input type="file" accept="image/*" onChange={(e) => uploadFile(field, e)} className="hidden" />
+                </label>
+                <p className="text-xs text-gray-400 mt-2">建议尺寸: 1920x420px</p>
+              </div>
+            </div>
+          ))}
         </div>
       </motion.div>
 

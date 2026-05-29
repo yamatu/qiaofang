@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from 'lucide-react';
 import Header from '@/components/Header';
@@ -9,6 +9,7 @@ import PageBanner from '@/components/PageBanner';
 import { useI18n } from '@/lib/i18n';
 import api from '@/lib/api';
 import { usePageMeta } from '@/lib/useMeta';
+import { useCompanyInfo } from '@/lib/company';
 
 export default function ContactPage() {
   const { t } = useI18n();
@@ -16,20 +17,7 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<{address?: string; phone?: string; email?: string}>({});
-  const [companyLoaded, setCompanyLoaded] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    api.get('/company').then(res => {
-      if (mounted && res.data && Object.keys(res.data).length > 0) setCompanyInfo(res.data);
-    }).catch(() => {}).finally(() => {
-      if (mounted) setCompanyLoaded(true);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const { info: companyInfo, loaded: companyLoaded } = useCompanyInfo();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,7 +39,7 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <PageBanner title={t.contact.title} subtitle={t.contact.subtitle} />
+      <PageBanner title={t.contact.title} subtitle={t.contact.subtitle} image={companyInfo.contact_banner} />
 
       <section className="py-16">
         <div className="container mx-auto px-6 max-w-7xl">

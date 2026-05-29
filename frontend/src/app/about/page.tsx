@@ -9,7 +9,7 @@ import PageBanner from '@/components/PageBanner';
 import { useI18n } from '@/lib/i18n';
 import { usePageMeta } from '@/lib/useMeta';
 import api from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
+import { getAssetUrl, useCompanyInfo } from '@/lib/company';
 
 const timeline = [
   { year: '2008', text: '公司成立' },
@@ -51,17 +51,11 @@ export default function AboutPage() {
   const { t } = useI18n();
   usePageMeta(`${t.nav.about} - 乔方科技`, '昆山乔方电子科技有限公司 - 国家级高新技术企业');
   const [partners, setPartners] = useState<{id:number;name:string;logo_url:string}[]>([]);
-  const [aboutImage, setAboutImage] = useState('');
-  const [companyLoaded, setCompanyLoaded] = useState(false);
+  const { info: companyInfo, loaded: companyLoaded } = useCompanyInfo();
   useEffect(() => {
     let mounted = true;
     api.get('/partners').then(r => {
       if (mounted) setPartners(r.data || []);
-    });
-    api.get('/company').then(r => {
-      if (mounted && r.data?.about_image) setAboutImage(r.data.about_image);
-    }).catch(() => {}).finally(() => {
-      if (mounted) setCompanyLoaded(true);
     });
     return () => {
       mounted = false;
@@ -71,7 +65,7 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <PageBanner title="关于乔方科技" subtitle="精密智造，连接未来" />
+      <PageBanner title="关于乔方科技" subtitle="精密智造，连接未来" image={companyInfo.about_banner} />
 
       {/* Company intro */}
       <section className="py-20">
@@ -96,8 +90,8 @@ export default function AboutPage() {
             </motion.div>
             <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="relative">
               <div className="aspect-[4/3] bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl overflow-hidden">
-                {aboutImage ? (
-                  <img src={`${API_BASE_URL}${aboutImage}`} alt="乔方科技" className="w-full h-full object-cover" />
+                {companyInfo.about_image ? (
+                  <img src={getAssetUrl(companyInfo.about_image)} alt="乔方科技" className="w-full h-full object-cover" />
                 ) : companyLoaded ? (
                   <div className="w-full h-full flex items-center justify-center">
                     <div className="text-center">
@@ -171,7 +165,7 @@ export default function AboutPage() {
               {partners.map((p, i) => (
                 <motion.div key={p.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                   className="bg-white rounded-xl p-4 h-20 flex items-center justify-center border border-gray-100 hover:shadow-md transition-shadow">
-                  {p.logo_url ? <img src={`${API_BASE_URL}${p.logo_url}`} alt={p.name} className="max-h-full max-w-full object-contain" /> : <span className="text-sm text-gray-500 font-medium">{p.name}</span>}
+                  {p.logo_url ? <img src={getAssetUrl(p.logo_url)} alt={p.name} className="max-h-full max-w-full object-contain" /> : <span className="text-sm text-gray-500 font-medium">{p.name}</span>}
                 </motion.div>
               ))}
             </div>

@@ -18,8 +18,10 @@ import (
 
 func (h *Handler) GetCompanyInfo(c *gin.Context) {
 	var about, phone, email, address, wechatQR, logoURL, logoSmallURL, aboutImage, heroImage string
-	err := h.db.QueryRow("SELECT COALESCE(about_text,''), COALESCE(phone,''), COALESCE(email,''), COALESCE(address,''), COALESCE(wechat_qr,''), COALESCE(logo_url,''), COALESCE(logo_small_url,''), COALESCE(about_image,''), COALESCE(hero_image,'') FROM company_info LIMIT 1").
-		Scan(&about, &phone, &email, &address, &wechatQR, &logoURL, &logoSmallURL, &aboutImage, &heroImage)
+	var aboutBanner, productsBanner, certificatesBanner, newsBanner, contactBanner string
+	var logoWidth, logoHeight int
+	err := h.db.QueryRow("SELECT COALESCE(about_text,''), COALESCE(phone,''), COALESCE(email,''), COALESCE(address,''), COALESCE(wechat_qr,''), COALESCE(logo_url,''), COALESCE(logo_small_url,''), COALESCE(about_image,''), COALESCE(hero_image,''), COALESCE(logo_width,0), COALESCE(logo_height,0), COALESCE(about_banner,''), COALESCE(products_banner,''), COALESCE(certificates_banner,''), COALESCE(news_banner,''), COALESCE(contact_banner,'') FROM company_info LIMIT 1").
+		Scan(&about, &phone, &email, &address, &wechatQR, &logoURL, &logoSmallURL, &aboutImage, &heroImage, &logoWidth, &logoHeight, &aboutBanner, &productsBanner, &certificatesBanner, &newsBanner, &contactBanner)
 	if err != nil {
 		c.JSON(http.StatusOK, gin.H{})
 		return
@@ -29,26 +31,37 @@ func (h *Handler) GetCompanyInfo(c *gin.Context) {
 		"address": address, "wechat_qr": wechatQR,
 		"logo_url": logoURL, "logo_small_url": logoSmallURL,
 		"about_image": aboutImage, "hero_image": heroImage,
+		"logo_width": logoWidth, "logo_height": logoHeight,
+		"about_banner": aboutBanner, "products_banner": productsBanner,
+		"certificates_banner": certificatesBanner, "news_banner": newsBanner,
+		"contact_banner": contactBanner,
 	})
 }
 
 func (h *Handler) UpdateCompanyInfo(c *gin.Context) {
 	var req struct {
-		AboutText    string `json:"about_text"`
-		Phone        string `json:"phone"`
-		Email        string `json:"email"`
-		Address      string `json:"address"`
-		WechatQR     string `json:"wechat_qr"`
-		LogoURL      string `json:"logo_url"`
-		LogoSmallURL string `json:"logo_small_url"`
-		AboutImage   string `json:"about_image"`
-		HeroImage    string `json:"hero_image"`
+		AboutText          string `json:"about_text"`
+		Phone              string `json:"phone"`
+		Email              string `json:"email"`
+		Address            string `json:"address"`
+		WechatQR           string `json:"wechat_qr"`
+		LogoURL            string `json:"logo_url"`
+		LogoSmallURL       string `json:"logo_small_url"`
+		AboutImage         string `json:"about_image"`
+		HeroImage          string `json:"hero_image"`
+		LogoWidth          int    `json:"logo_width"`
+		LogoHeight         int    `json:"logo_height"`
+		AboutBanner        string `json:"about_banner"`
+		ProductsBanner     string `json:"products_banner"`
+		CertificatesBanner string `json:"certificates_banner"`
+		NewsBanner         string `json:"news_banner"`
+		ContactBanner      string `json:"contact_banner"`
 	}
 	c.ShouldBindJSON(&req)
 	h.db.Exec("DELETE FROM company_info")
 	h.db.Exec(
-		"INSERT INTO company_info (about_text, phone, email, address, wechat_qr, logo_url, logo_small_url, about_image, hero_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)",
-		req.AboutText, req.Phone, req.Email, req.Address, req.WechatQR, req.LogoURL, req.LogoSmallURL, req.AboutImage, req.HeroImage,
+		"INSERT INTO company_info (about_text, phone, email, address, wechat_qr, logo_url, logo_small_url, about_image, hero_image, logo_width, logo_height, about_banner, products_banner, certificates_banner, news_banner, contact_banner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
+		req.AboutText, req.Phone, req.Email, req.Address, req.WechatQR, req.LogoURL, req.LogoSmallURL, req.AboutImage, req.HeroImage, req.LogoWidth, req.LogoHeight, req.AboutBanner, req.ProductsBanner, req.CertificatesBanner, req.NewsBanner, req.ContactBanner,
 	)
 	c.JSON(http.StatusOK, gin.H{"message": "updated"})
 }

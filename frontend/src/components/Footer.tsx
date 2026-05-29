@@ -1,36 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import { Phone, Mail, MapPin } from 'lucide-react';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n';
-import api from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
-
-interface CompanyInfo {
-  logo_url?: string;
-  wechat_qr?: string;
-  phone?: string;
-  email?: string;
-  address?: string;
-}
+import { getAssetUrl, useCompanyInfo } from '@/lib/company';
 
 export default function Footer() {
   const { t } = useI18n();
-  const [info, setInfo] = useState<CompanyInfo>({});
-  const [companyLoaded, setCompanyLoaded] = useState(false);
-
-  useEffect(() => {
-    let mounted = true;
-    api.get('/company').then(res => {
-      if (mounted && res.data && Object.keys(res.data).length > 0) setInfo(res.data);
-    }).catch(() => {}).finally(() => {
-      if (mounted) setCompanyLoaded(true);
-    });
-    return () => {
-      mounted = false;
-    };
-  }, []);
+  const { info, loaded: companyLoaded } = useCompanyInfo();
 
   return (
     <footer className="bg-gray-900 text-gray-300 pt-20 pb-10 border-t-4 border-blue-600">
@@ -39,7 +16,12 @@ export default function Footer() {
           <div className="space-y-6">
             <div className="flex items-center gap-2">
               {info.logo_url ? (
-                <img src={`${API_BASE_URL}${info.logo_url}`} alt="乔方科技" className="h-12 object-contain" />
+                <img
+                  src={getAssetUrl(info.logo_url)}
+                  alt="乔方科技"
+                  className="object-contain"
+                  style={{ width: info.logo_width ? `${info.logo_width}px` : undefined, height: info.logo_height ? `${info.logo_height}px` : '48px' }}
+                />
               ) : companyLoaded ? (
                 <>
                   <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xl">Q</div>
@@ -74,7 +56,7 @@ export default function Footer() {
             <h4 className="text-white font-bold text-lg mb-6">{t.footer.wechat}</h4>
             {info.wechat_qr ? (
               <div className="bg-white p-2 rounded-lg inline-block">
-                <img src={`${API_BASE_URL}${info.wechat_qr}`} alt="微信二维码" className="w-24 h-24 object-contain" />
+                <img src={getAssetUrl(info.wechat_qr)} alt="微信二维码" className="w-24 h-24 object-contain" />
               </div>
             ) : companyLoaded ? (
               <div className="bg-white p-2 rounded-lg inline-block">

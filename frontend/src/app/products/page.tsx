@@ -2,14 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ChevronRight, Package } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import PageBanner from '@/components/PageBanner';
 import { useI18n } from '@/lib/i18n';
 import api from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
+import { getAssetUrl, useCompanyInfo } from '@/lib/company';
 import { usePageMeta } from '@/lib/useMeta';
 
 interface Product {
@@ -26,66 +26,129 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [activeCategory, setActiveCategory] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [loaded, setLoaded] = useState(false);
+  const { info: companyInfo } = useCompanyInfo();
 
   useEffect(() => {
-    api.get('/products').then(res => setProducts(res.data || []));
-    api.get('/categories').then(res => {
-      const cats = (res.data || []).map((c: {name: string}) => c.name);
+    let mounted = true;
+    Promise.all([
+      api.get('/products'),
+      api.get('/categories'),
+    ]).then(([productsRes, categoriesRes]) => {
+      if (!mounted) return;
+      setProducts(productsRes.data || []);
+      const cats = (categoriesRes.data || []).map((c: {name: string}) => c.name);
       setCategories(cats);
+    }).catch(() => {}).finally(() => {
+      if (mounted) setLoaded(true);
     });
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory]);
 
   const filtered = activeCategory
     ? products.filter(p => p.category === activeCategory)
     : products;
+  const pageSize = 12;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const pagedProducts = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const categoryCounts = categories.reduce<Record<string, number>>((acc, cat) => {
+    acc[cat] = products.filter(p => p.category === cat).length;
+    return acc;
+  }, {});
 
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <PageBanner title={t.products.title} subtitle={t.products.subtitle} />
+      <PageBanner title={t.products.title} subtitle={t.products.subtitle} image={companyInfo.products_banner} />
 
-      <section className="py-16">
+      <section className="py-14 bg-gray-50">
         <div className="container mx-auto px-6 max-w-7xl">
-          <div className="flex flex-wrap gap-3 mb-10">
-            <button onClick={() => setActiveCategory('')}
-              className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${!activeCategory ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-              {t.products.allCategories}
-            </button>
-            {categories.map(cat => (
-              <button key={cat} onClick={() => setActiveCategory(cat)}
-                className={`px-5 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
-                {cat}
-              </button>
-            ))}
-          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-7 items-start">
+            <aside className="bg-white border border-gray-100 shadow-sm lg:sticky lg:top-28">
+              <div className="bg-blue-600 text-white px-5 py-4 font-semibold text-lg relative overflow-hidden">
+                <span>Products/ 产品中心</span>
+                <span className="absolute right-0 top-0 h-full w-10 bg-blue-500/40 skew-x-[-35deg] translate-x-4" />
+              </div>
+              <div className="px-4 py-4">
+                <button onClick={() => setActiveCategory('')} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${!activeCategory ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
+                  <span>{t.products.allCategories}</span>
+                  <ChevronRight size={16} className="text-blue-400" />
+                </button>
+                {categories.map(cat => (
+                  <button key={cat} onClick={() => setActiveCategory(cat)} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${activeCategory === cat ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
+                    <span>{cat}</span>
+                    <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+                      {categoryCounts[cat] > 0 && <span>{categoryCounts[cat]}</span>}
+                      <ChevronRight size={16} className="text-blue-400" />
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </aside>
 
-          {filtered.length === 0 ? (
-            <div className="text-center py-20 text-gray-400">{t.products.noProducts}</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filtered.map((product, i) => (
-                <motion.div key={product.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
-                  <Link href={`/products/${product.id}`} className="group block bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
-                    <div className="aspect-[4/3] bg-gray-50 overflow-hidden">
-                      {product.image_url ? (
-                        <img src={`${API_BASE_URL}${product.image_url}`} alt={product.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">No Image</div>
-                      )}
+            <main className="bg-white border border-gray-100 px-5 md:px-7 py-7 shadow-sm">
+              <div className="flex items-center justify-center border-b border-gray-200 pb-3 mb-8">
+                <h2 className="text-xl font-bold text-blue-600">产品中心</h2>
+              </div>
+
+              {!loaded ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {Array.from({ length: 9 }).map((_, i) => (
+                    <div key={i} className="border border-gray-200 bg-white p-4 animate-pulse">
+                      <div className="h-44 bg-gray-100 mb-4" />
+                      <div className="h-5 w-1/2 bg-gray-100 mx-auto" />
                     </div>
-                    <div className="p-6">
-                      {product.category && <span className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1 rounded-full">{product.category}</span>}
-                      <h3 className="text-lg font-bold text-gray-900 mt-3 group-hover:text-blue-600 transition-colors">{product.title}</h3>
-                      <p className="text-sm text-gray-500 mt-2 line-clamp-2">{product.description}</p>
-                      <span className="inline-flex items-center text-blue-600 text-sm font-medium mt-4 group-hover:gap-2 transition-all">
-                        {t.products.viewDetail} <ArrowRight size={16} className="ml-1" />
-                      </span>
+                  ))}
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-20 text-gray-400">{t.products.noProducts}</div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+                    {pagedProducts.map((product, i) => (
+                      <motion.div key={product.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.025 }}>
+                        <Link href={`/products/${product.id}`} className="group block border border-gray-200 bg-white hover:border-blue-300 hover:shadow-lg transition-all">
+                          <div className="h-52 bg-white overflow-hidden flex items-center justify-center p-4">
+                            {product.image_url ? (
+                              <img src={getAssetUrl(product.image_url)} alt={product.title} className="max-w-full max-h-full object-contain group-hover:scale-105 transition-transform duration-500" />
+                            ) : (
+                              <Package size={42} className="text-gray-200" />
+                            )}
+                          </div>
+                          <div className="px-4 pb-4 text-center">
+                            <h3 className="text-base text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-1">{product.title}</h3>
+                            {product.description && <p className="text-xs text-gray-500 mt-2 line-clamp-2">{product.description}</p>}
+                          </div>
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-1 mt-8 text-sm">
+                      <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="min-w-7 h-7 border border-gray-300 disabled:text-gray-300 disabled:border-gray-200 hover:border-blue-500">&lt;</button>
+                      {Array.from({ length: totalPages }).map((_, i) => {
+                        const page = i + 1;
+                        return (
+                          <button key={page} onClick={() => setCurrentPage(page)} className={`min-w-7 h-7 border ${currentPage === page ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 hover:border-blue-500'}`}>
+                            {page}
+                          </button>
+                        );
+                      })}
+                      <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="min-w-7 h-7 border border-gray-300 disabled:text-gray-300 disabled:border-gray-200 hover:border-blue-500">&gt;</button>
                     </div>
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          )}
+                  )}
+                </>
+              )}
+            </main>
+          </div>
         </div>
       </section>
 

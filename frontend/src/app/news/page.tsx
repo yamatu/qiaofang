@@ -9,7 +9,7 @@ import Footer from '@/components/Footer';
 import PageBanner from '@/components/PageBanner';
 import { useI18n } from '@/lib/i18n';
 import api from '@/lib/api';
-import { API_BASE_URL } from '@/lib/constants';
+import { getAssetUrl, useCompanyInfo } from '@/lib/company';
 import { usePageMeta } from '@/lib/useMeta';
 
 interface NewsItem {
@@ -25,6 +25,7 @@ export default function NewsPage() {
   const { t } = useI18n();
   usePageMeta(`${t.nav.news} - 乔方科技`, '乔方科技新闻资讯 - 最新动态与行业资讯');
   const [news, setNews] = useState<NewsItem[]>([]);
+  const { info: companyInfo } = useCompanyInfo();
 
   useEffect(() => {
     api.get('/news').then(res => {
@@ -36,7 +37,7 @@ export default function NewsPage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-      <PageBanner title={t.news.title} subtitle={t.news.subtitle} />
+      <PageBanner title={t.news.title} subtitle={t.news.subtitle} image={companyInfo.news_banner} />
 
       <section className="py-16">
         <div className="container mx-auto px-6 max-w-7xl">
@@ -49,7 +50,7 @@ export default function NewsPage() {
                   <Link href={`/news/${item.id}`} className="group block bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-shadow">
                     <div className="aspect-[16/9] bg-gray-50 overflow-hidden">
                       {item.image_url ? (
-                        <img src={`${API_BASE_URL}${item.image_url}`} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <img src={getAssetUrl(item.image_url)} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-50 to-gray-50 text-gray-300">News</div>
                       )}

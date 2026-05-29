@@ -223,5 +223,12 @@ func initDB(db *sql.DB) {
 	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS logo_small_url VARCHAR(500) DEFAULT ''")
 	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS about_image VARCHAR(500) DEFAULT ''")
 	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS hero_image VARCHAR(500) DEFAULT ''")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS logo_width INT DEFAULT 0")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS logo_height INT DEFAULT 0")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS about_banner VARCHAR(500) DEFAULT ''")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS products_banner VARCHAR(500) DEFAULT ''")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS certificates_banner VARCHAR(500) DEFAULT ''")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS news_banner VARCHAR(500) DEFAULT ''")
+	db.Exec("ALTER TABLE company_info ADD COLUMN IF NOT EXISTS contact_banner VARCHAR(500) DEFAULT ''")
 	log.Println("Database schema initialized")
 }
