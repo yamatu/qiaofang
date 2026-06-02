@@ -59,7 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setCacheMessage('缓存已刷新');
       setTimeout(() => setCacheMessage(''), 3000);
     } catch (err: any) {
-      setCacheMessage(err.response?.data?.error || '刷新失败');
+      setCacheMessage(`前台缓存已刷新，CDN刷新失败：${err.response?.data?.error || '请检查配置'}`);
       setTimeout(() => setCacheMessage(''), 5000);
     } finally {
       setPurging(false);
