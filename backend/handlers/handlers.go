@@ -69,6 +69,11 @@ func (h *Handler) UploadImage(c *gin.Context) {
 	filename := uuid.New().String() + ext
 	savePath := filepath.Join("uploads", filename)
 
+	if err := os.MkdirAll("uploads", 0755); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to prepare upload directory"})
+		return
+	}
+
 	if err := c.SaveUploadedFile(file, savePath); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save file"})
 		return

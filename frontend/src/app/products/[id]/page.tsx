@@ -69,9 +69,9 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="lg:col-span-3">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-              <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center">
+              <div className="aspect-[4/3] bg-gray-50 flex items-center justify-center p-6">
                 {product.image_url ? (
-                  <img src={`${API_BASE_URL}${product.image_url}`} alt={product.title} className="w-full h-full object-cover" />
+                  <img src={`${API_BASE_URL}${product.image_url}`} alt={product.title} className="max-h-full max-w-full object-contain" />
                 ) : (
                   <Package size={64} className="text-gray-200" />
                 )}
@@ -116,8 +116,8 @@ export default function ProductDetailPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {related.map(p => (
                 <Link key={p.id} href={`/products/${p.id}`} className="group block bg-white rounded-xl border border-gray-100 overflow-hidden hover:shadow-lg transition-all">
-                  <div className="aspect-[4/3] bg-gray-50 overflow-hidden flex items-center justify-center">
-                    {p.image_url ? <img src={`${API_BASE_URL}${p.image_url}`} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" /> : <Package size={32} className="text-gray-200" />}
+                  <div className="aspect-[4/3] bg-gray-50 overflow-hidden flex items-center justify-center p-4">
+                    {p.image_url ? <img src={`${API_BASE_URL}${p.image_url}`} alt={p.title} className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform duration-500" /> : <Package size={32} className="text-gray-200" />}
                   </div>
                   <div className="p-4">
                     <h4 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">{p.title}</h4>

@@ -3,6 +3,7 @@ package handlers
 import (
 	"archive/tar"
 	"compress/gzip"
+	"database/sql"
 	"fmt"
 	"io"
 	"net/http"
@@ -23,6 +24,10 @@ func (h *Handler) GetCompanyInfo(c *gin.Context) {
 	err := h.db.QueryRow("SELECT COALESCE(about_text,''), COALESCE(phone,''), COALESCE(email,''), COALESCE(address,''), COALESCE(wechat_qr,''), COALESCE(logo_url,''), COALESCE(logo_small_url,''), COALESCE(about_image,''), COALESCE(hero_image,''), COALESCE(logo_width,0), COALESCE(logo_height,0), COALESCE(about_banner,''), COALESCE(products_banner,''), COALESCE(certificates_banner,''), COALESCE(news_banner,''), COALESCE(contact_banner,'') FROM company_info LIMIT 1").
 		Scan(&about, &phone, &email, &address, &wechatQR, &logoURL, &logoSmallURL, &aboutImage, &heroImage, &logoWidth, &logoHeight, &aboutBanner, &productsBanner, &certificatesBanner, &newsBanner, &contactBanner)
 	if err != nil {
+		if err != sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(http.StatusOK, gin.H{})
 		return
 	}
@@ -57,12 +62,39 @@ func (h *Handler) UpdateCompanyInfo(c *gin.Context) {
 		NewsBanner         string `json:"news_banner"`
 		ContactBanner      string `json:"contact_banner"`
 	}
-	c.ShouldBindJSON(&req)
-	h.db.Exec("DELETE FROM company_info")
-	h.db.Exec(
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if req.LogoWidth < 0 {
+		req.LogoWidth = 0
+	}
+	if req.LogoHeight < 0 {
+		req.LogoHeight = 0
+	}
+
+	tx, err := h.db.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	defer tx.Rollback()
+
+	if _, err := tx.Exec("DELETE FROM company_info"); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if _, err := tx.Exec(
 		"INSERT INTO company_info (about_text, phone, email, address, wechat_qr, logo_url, logo_small_url, about_image, hero_image, logo_width, logo_height, about_banner, products_banner, certificates_banner, news_banner, contact_banner) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)",
 		req.AboutText, req.Phone, req.Email, req.Address, req.WechatQR, req.LogoURL, req.LogoSmallURL, req.AboutImage, req.HeroImage, req.LogoWidth, req.LogoHeight, req.AboutBanner, req.ProductsBanner, req.CertificatesBanner, req.NewsBanner, req.ContactBanner,
-	)
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{"message": "updated"})
 }
 

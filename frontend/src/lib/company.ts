@@ -45,6 +45,16 @@ export function fetchCompanyInfo() {
   return pendingCompanyInfo;
 }
 
+export function updateCompanyInfoCache(info: CompanyInfo) {
+  cachedCompanyInfo = info;
+  pendingCompanyInfo = null;
+}
+
+export function clearCompanyInfoCache() {
+  cachedCompanyInfo = null;
+  pendingCompanyInfo = null;
+}
+
 export function useCompanyInfo() {
   const [info, setInfo] = useState<CompanyInfo>(cachedCompanyInfo || {});
   const [loaded, setLoaded] = useState(!!cachedCompanyInfo);

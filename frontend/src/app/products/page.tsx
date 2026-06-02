@@ -37,9 +37,11 @@ export default function ProductsPage() {
       api.get('/categories'),
     ]).then(([productsRes, categoriesRes]) => {
       if (!mounted) return;
-      setProducts(productsRes.data || []);
-      const cats = (categoriesRes.data || []).map((c: {name: string}) => c.name);
-      setCategories(cats);
+      const productData = (productsRes.data || []) as Product[];
+      setProducts(productData);
+      const managedCategories = (categoriesRes.data || []).map((c: {name: string}) => c.name).filter(Boolean);
+      const productCategories = productData.map(p => p.category).filter(Boolean);
+      setCategories(Array.from(new Set([...managedCategories, ...productCategories])));
     }).catch(() => {}).finally(() => {
       if (mounted) setLoaded(true);
     });
@@ -48,9 +50,10 @@ export default function ProductsPage() {
     };
   }, []);
 
-  useEffect(() => {
+  const handleCategoryChange = (category: string) => {
+    setActiveCategory(category);
     setCurrentPage(1);
-  }, [activeCategory]);
+  };
 
   const filtered = activeCategory
     ? products.filter(p => p.category === activeCategory)
@@ -62,6 +65,8 @@ export default function ProductsPage() {
     acc[cat] = products.filter(p => p.category === cat).length;
     return acc;
   }, {});
+  const visiblePageStart = filtered.length === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const visiblePageEnd = Math.min(currentPage * pageSize, filtered.length);
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,12 +82,15 @@ export default function ProductsPage() {
                 <span className="absolute right-0 top-0 h-full w-10 bg-blue-500/40 skew-x-[-35deg] translate-x-4" />
               </div>
               <div className="px-4 py-4">
-                <button onClick={() => setActiveCategory('')} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${!activeCategory ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
+                <button onClick={() => handleCategoryChange('')} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${!activeCategory ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
                   <span>{t.products.allCategories}</span>
-                  <ChevronRight size={16} className="text-blue-400" />
+                  <span className="inline-flex items-center gap-2 text-xs text-gray-400">
+                    <span>{products.length}</span>
+                    <ChevronRight size={16} className="text-blue-400" />
+                  </span>
                 </button>
                 {categories.map(cat => (
-                  <button key={cat} onClick={() => setActiveCategory(cat)} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${activeCategory === cat ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
+                  <button key={cat} onClick={() => handleCategoryChange(cat)} className={`w-full flex items-center justify-between border-b border-gray-200 px-3 py-3 text-left text-sm transition-colors ${activeCategory === cat ? 'text-blue-600 font-semibold' : 'text-gray-700 hover:text-blue-600'}`}>
                     <span>{cat}</span>
                     <span className="inline-flex items-center gap-2 text-xs text-gray-400">
                       {categoryCounts[cat] > 0 && <span>{categoryCounts[cat]}</span>}
@@ -111,6 +119,10 @@ export default function ProductsPage() {
                 <div className="text-center py-20 text-gray-400">{t.products.noProducts}</div>
               ) : (
                 <>
+                  <div className="mb-5 flex flex-col gap-2 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between">
+                    <span>{activeCategory || t.products.allCategories}</span>
+                    <span>共 {filtered.length} 个产品，当前显示 {visiblePageStart}-{visiblePageEnd}</span>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                     {pagedProducts.map((product, i) => (
                       <motion.div key={product.id} initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.025 }}>
