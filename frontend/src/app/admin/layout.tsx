@@ -7,7 +7,7 @@ import {
   Image, Package, Newspaper, Award,
   Building2, Database, LogOut, Menu, X, MessageSquare, Tags, Handshake, AppWindow, Settings, RefreshCw, Cloud
 } from 'lucide-react';
-import { purgeSiteCache } from '@/lib/cache';
+import { refreshAllSiteCache } from '@/lib/cache';
 
 const sidebarLinks = [
   { name: '轮播管理', href: '/admin/slides', icon: Image },
@@ -54,16 +54,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handlePurgeCache = async () => {
     setPurging(true);
     setCacheMessage('');
-    try {
-      await purgeSiteCache();
-      setCacheMessage('缓存已刷新');
-      setTimeout(() => setCacheMessage(''), 3000);
-    } catch (err: any) {
-      setCacheMessage(`前台缓存已刷新，CDN刷新失败：${err.response?.data?.error || '请检查配置'}`);
-      setTimeout(() => setCacheMessage(''), 5000);
-    } finally {
-      setPurging(false);
-    }
+    const cacheRefreshed = await refreshAllSiteCache();
+    setCacheMessage(cacheRefreshed ? '缓存已刷新' : '前台缓存已刷新，CDN刷新失败：请检查配置');
+    setTimeout(() => setCacheMessage(''), cacheRefreshed ? 3000 : 5000);
+    setPurging(false);
   };
 
   return (

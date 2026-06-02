@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Cloud, RefreshCw, Save, ShieldCheck } from 'lucide-react';
 import api from '@/lib/api';
-import { purgeSiteCache } from '@/lib/cache';
+import { refreshAllSiteCache } from '@/lib/cache';
 
 export default function CacheSettingsPage() {
   const [form, setForm] = useState({ api_token: '', zone_name: 'yamatu.xyz', zone_id: '' });
@@ -56,14 +56,13 @@ export default function CacheSettingsPage() {
     setPurging(true);
     setMessage('');
     setError('');
-    try {
-      await purgeSiteCache();
+    const cacheRefreshed = await refreshAllSiteCache();
+    if (cacheRefreshed) {
       setMessage('缓存已刷新');
-    } catch (err: any) {
-      setError(err.response?.data?.error || '刷新失败，请检查 Token 权限');
-    } finally {
-      setPurging(false);
+    } else {
+      setError('前台缓存已刷新，CDN刷新失败，请检查 Token 权限');
     }
+    setPurging(false);
   };
 
   return (

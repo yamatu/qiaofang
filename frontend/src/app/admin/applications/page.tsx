@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
-import { purgeSiteCache } from '@/lib/cache';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface App { id: number; title: string; description: string; image_url: string; sort_order: number; }
@@ -42,12 +42,8 @@ export default function ApplicationsPage() {
       await fetchItems();
       setOpen(false);
       setEditing(null);
-      try {
-        await purgeSiteCache(['/', '/api/applications']);
-        setMessage('应用领域已保存，页面缓存已刷新');
-      } catch (cacheErr: any) {
-        setMessage(`应用领域已保存，但缓存刷新失败：${cacheErr.response?.data?.error || '请手动刷新缓存'}`);
-      }
+      const cacheRefreshed = await refreshAllSiteCache();
+      setMessage(cacheRefreshed ? '应用领域已保存，页面缓存已刷新' : '应用领域已保存，前台缓存已刷新，CDN刷新失败');
     } catch (err: any) {
       setError(err.response?.data?.error || '保存失败，请稍后重试');
     } finally {
@@ -62,12 +58,8 @@ export default function ApplicationsPage() {
     try {
       await api.delete(`/admin/applications/${id}`);
       await fetchItems();
-      try {
-        await purgeSiteCache(['/', '/api/applications']);
-        setMessage('应用领域已删除，页面缓存已刷新');
-      } catch (cacheErr: any) {
-        setMessage(`应用领域已删除，但缓存刷新失败：${cacheErr.response?.data?.error || '请手动刷新缓存'}`);
-      }
+      const cacheRefreshed = await refreshAllSiteCache();
+      setMessage(cacheRefreshed ? '应用领域已删除，页面缓存已刷新' : '应用领域已删除，前台缓存已刷新，CDN刷新失败');
     } catch (err: any) {
       setError(err.response?.data?.error || '删除失败，请稍后重试');
     }

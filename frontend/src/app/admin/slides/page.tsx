@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface Slide {
@@ -48,13 +49,15 @@ export default function SlidesPage() {
     setOpen(false);
     setEditing(null);
     setForm({ title: '', subtitle: '', description: '', image_url: '', sort_order: 0, active: true });
-    fetchSlides();
+    await fetchSlides();
+    await refreshAllSiteCache();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     await api.delete(`/admin/slides/${id}`);
-    fetchSlides();
+    await fetchSlides();
+    await refreshAllSiteCache();
   };
 
   const openEdit = (slide: Slide) => {
@@ -151,4 +154,3 @@ export default function SlidesPage() {
     </div>
   );
 }
-

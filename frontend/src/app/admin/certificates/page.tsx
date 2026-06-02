@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface Certificate {
@@ -44,13 +45,15 @@ export default function CertificatesPage() {
     }
     setOpen(false);
     setEditing(null);
-    fetchItems();
+    await fetchItems();
+    await refreshAllSiteCache();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
     await api.delete(`/admin/certificates/${id}`);
-    fetchItems();
+    await fetchItems();
+    await refreshAllSiteCache();
   };
 
   return (

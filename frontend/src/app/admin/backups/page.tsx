@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Database, Download, RefreshCw, RotateCcw, AlertTriangle } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface Backup {
@@ -43,6 +44,7 @@ export default function BackupsPage() {
     setRestoring(true);
     try {
       await api.post(`/admin/restore/${restoreTarget}`);
+      await refreshAllSiteCache();
       alert('还原成功！数据库和图片已恢复。');
     } catch {
       alert('还原失败，请检查备份文件是否完整。');

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { ImageIcon, Loader2, Save, Trash2, Upload } from 'lucide-react';
 import api from '@/lib/api';
-import { purgeSiteCache } from '@/lib/cache';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { getAssetUrl, updateCompanyInfoCache } from '@/lib/company';
 
 type CompanyForm = {
@@ -124,7 +124,7 @@ export default function CompanyPage() {
     try {
       await api.put('/admin/company', form);
       updateCompanyInfoCache(form);
-      purgeSiteCache(['/', '/about', '/products', '/certificates', '/news', '/contact', '/api/company']).catch(() => {});
+      await refreshAllSiteCache();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch {

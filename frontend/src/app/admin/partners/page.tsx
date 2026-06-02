@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, Upload } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { refreshAllSiteCache } from '@/lib/cache';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface Partner { id: number; name: string; logo_url: string; website: string; sort_order: number; }
@@ -28,12 +29,12 @@ export default function PartnersPage() {
   const handleSave = async () => {
     if (editing) { await api.put(`/admin/partners/${editing.id}`, form); }
     else { await api.post('/admin/partners', form); }
-    setOpen(false); setEditing(null); fetchItems();
+    setOpen(false); setEditing(null); await fetchItems(); await refreshAllSiteCache();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
-    await api.delete(`/admin/partners/${id}`); fetchItems();
+    await api.delete(`/admin/partners/${id}`); await fetchItems(); await refreshAllSiteCache();
   };
 
   return (

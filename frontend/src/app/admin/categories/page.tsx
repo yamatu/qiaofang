@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import api from '@/lib/api';
+import { refreshAllSiteCache } from '@/lib/cache';
 
 interface Category { id: number; name: string; sort_order: number; }
 
@@ -20,12 +21,12 @@ export default function CategoriesPage() {
   const handleSave = async () => {
     if (editing) { await api.put(`/admin/categories/${editing.id}`, form); }
     else { await api.post('/admin/categories', form); }
-    setOpen(false); setEditing(null); fetch();
+    setOpen(false); setEditing(null); await fetch(); await refreshAllSiteCache();
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm('确定删除？')) return;
-    await api.delete(`/admin/categories/${id}`); fetch();
+    await api.delete(`/admin/categories/${id}`); await fetch(); await refreshAllSiteCache();
   };
 
   return (
