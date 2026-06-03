@@ -90,7 +90,7 @@ func (h *Handler) GetProduct(c *gin.Context) {
 	var title, category, desc, imageURL, specs string
 	var active bool
 	var createdAt time.Time
-	err := h.db.QueryRow("SELECT title, category, description, image_url, specs, active, created_at FROM products WHERE id=$1", id).Scan(&title, &category, &desc, &imageURL, &specs, &active, &createdAt)
+	err := h.db.QueryRow("SELECT title, category, description, image_url, specs, active, created_at FROM products WHERE id=$1 AND active=true", id).Scan(&title, &category, &desc, &imageURL, &specs, &active, &createdAt)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 		return

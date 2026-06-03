@@ -85,6 +85,7 @@ func main() {
 			admin.POST("/slides", h.CreateSlide)
 			admin.PUT("/slides/:id", h.UpdateSlide)
 			admin.DELETE("/slides/:id", h.DeleteSlide)
+			admin.GET("/products", h.GetAdminProducts)
 			admin.POST("/products", h.CreateProduct)
 			admin.PUT("/products/:id", h.UpdateProduct)
 			admin.DELETE("/products/:id", h.DeleteProduct)
