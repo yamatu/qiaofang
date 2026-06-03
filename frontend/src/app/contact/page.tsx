@@ -13,7 +13,7 @@ import { useCompanyInfo } from '@/lib/company';
 
 export default function ContactPage() {
   const { t } = useI18n();
-  usePageMeta(`${t.nav.contact} - 乔方科技`, '联系乔方科技 - 江苏省昆山市陆家镇珠竹路26号');
+  usePageMeta(`${t.nav.contact} - 乔方科技`, '联系乔方科技 - 江苏省苏州市昆山市陆家镇珠竹路26号');
   const [form, setForm] = useState({ name: '', email: '', phone: '', company: '', message: '' });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);

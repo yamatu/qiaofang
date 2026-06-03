@@ -23,13 +23,18 @@ export default function Header() {
   }, [searchOpen]);
 
   useEffect(() => {
-    if (!searchQuery.trim()) { setSearchResults([]); return; }
+    const keyword = searchQuery.trim();
     const timer = setTimeout(async () => {
+      if (!keyword) {
+        setSearchResults([]);
+        return;
+      }
+
       const results: {type:string;id:number;title:string}[] = [];
       try {
         const [products, news] = await Promise.all([api.get('/products'), api.get('/news')]);
-        (products.data || []).filter((p: {title:string}) => p.title.includes(searchQuery)).slice(0, 5).forEach((p: {id:number;title:string}) => results.push({type:'product', id:p.id, title:p.title}));
-        (news.data || []).filter((n: {title:string}) => n.title.includes(searchQuery)).slice(0, 5).forEach((n: {id:number;title:string}) => results.push({type:'news', id:n.id, title:n.title}));
+        (products.data || []).filter((p: {title:string}) => p.title.includes(keyword)).slice(0, 5).forEach((p: {id:number;title:string}) => results.push({type:'product', id:p.id, title:p.title}));
+        (news.data || []).filter((n: {title:string}) => n.title.includes(keyword)).slice(0, 5).forEach((n: {id:number;title:string}) => results.push({type:'news', id:n.id, title:n.title}));
       } catch {}
       setSearchResults(results);
     }, 300);
@@ -77,10 +82,10 @@ export default function Header() {
           </Link>
           <nav className="hidden md:flex space-x-8 lg:space-x-10">
             {navLinks.map((link, i) => (
-              <Link key={i} href={link.href} className={`font-medium transition-colors relative group text-sm lg:text-base ${isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}>
+              <a key={i} href={link.href} className={`font-medium transition-colors relative group text-sm lg:text-base ${isScrolled ? 'text-gray-700 hover:text-blue-600' : 'text-white/90 hover:text-white'}`}>
                 {link.name}
                 <span className={`absolute -bottom-2 left-0 w-0 h-0.5 transition-all group-hover:w-full ${isScrolled ? 'bg-blue-600' : 'bg-white'}`}></span>
-              </Link>
+              </a>
             ))}
           </nav>
           <div className={`hidden md:flex items-center space-x-6 transition-colors duration-500 ${isScrolled ? 'text-gray-600' : 'text-white'}`}>
@@ -100,7 +105,7 @@ export default function Header() {
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="md:hidden absolute top-full left-0 w-full bg-white shadow-xl border-t border-gray-100 py-4">
             <div className="flex flex-col px-6 space-y-4">
               {navLinks.map((link, i) => (
-                <Link key={i} href={link.href} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 font-medium pb-2 border-b border-gray-50">{link.name}</Link>
+                <a key={i} href={link.href} onClick={() => setMobileMenuOpen(false)} className="text-gray-700 font-medium pb-2 border-b border-gray-50">{link.name}</a>
               ))}
               <button onClick={toggleLocale} className="text-left text-blue-600 font-medium">{locale === 'zh' ? 'Switch to English' : '切换到中文'}</button>
             </div>

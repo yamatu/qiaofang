@@ -46,7 +46,7 @@ export default function Footer() {
           <div>
             <h4 className="text-white font-bold text-lg mb-6">{t.footer.contactUs}</h4>
             <ul className="space-y-4 text-sm">
-              <li className="flex items-start gap-3"><MapPin size={18} className="text-blue-500 flex-shrink-0 mt-0.5" /><span>{info.address || (companyLoaded ? '江苏省昆山市陆家镇珠竹路26号精伦智创园A栋' : '')}</span></li>
+              <li className="flex items-start gap-3"><MapPin size={18} className="text-blue-500 flex-shrink-0 mt-0.5" /><span>{info.address || (companyLoaded ? '江苏省苏州市昆山市陆家镇珠竹路26号' : '')}</span></li>
               <li className="flex items-center gap-3"><Phone size={18} className="text-blue-500 flex-shrink-0" /><span>{info.phone || (companyLoaded ? '13951186495' : '')}</span></li>
               <li className="flex items-center gap-3"><Mail size={18} className="text-blue-500 flex-shrink-0" /><span>{info.email || (companyLoaded ? 'davey@qiaofangcn.com' : '')}</span></li>
               <li className="text-xs text-gray-500 pt-2">供应商自荐邮箱:<br/>andy.ding@qiaofangcn.com<br/>hedy.zhang@qiaofangcn.com</li>

@@ -19,6 +19,18 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const defaultCompanyAddress = "江苏省苏州市昆山市陆家镇珠竹路26号"
+
+func normalizeCompanyAddress(address string) string {
+	address = strings.TrimSpace(address)
+	switch address {
+	case "", "江苏省昆山市陆家镇珠竹路26号精伦智创园A栋", "江苏省昆山市陆家镇珠竹路26号 精伦智能A栋", "江苏省昆山市陆家镇珠竹路26号":
+		return defaultCompanyAddress
+	default:
+		return address
+	}
+}
+
 func (h *Handler) GetCompanyInfo(c *gin.Context) {
 	var about, phone, email, address, wechatQR, logoURL, logoSmallURL, aboutImage, heroImage string
 	var aboutBanner, productsBanner, certificatesBanner, newsBanner, contactBanner string
@@ -30,9 +42,10 @@ func (h *Handler) GetCompanyInfo(c *gin.Context) {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{})
+		c.JSON(http.StatusOK, gin.H{"address": defaultCompanyAddress})
 		return
 	}
+	address = normalizeCompanyAddress(address)
 	c.JSON(http.StatusOK, gin.H{
 		"about_text": about, "phone": phone, "email": email,
 		"address": address, "wechat_qr": wechatQR,
