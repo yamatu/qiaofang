@@ -38,6 +38,17 @@ export default function ProductDetailPage() {
     }
   }, [params.id]);
 
+  const handleProductsBack = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    const currentParams = new URLSearchParams(window.location.search);
+    const backParams = new URLSearchParams();
+    const category = currentParams.get('category');
+    const page = currentParams.get('page');
+    if (category) backParams.set('category', category);
+    if (page) backParams.set('page', page);
+    event.preventDefault();
+    window.location.href = backParams.toString() ? `/products?${backParams.toString()}` : '/products';
+  };
+
   if (!product) return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -51,7 +62,7 @@ export default function ProductDetailPage() {
       <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 pt-28 pb-32">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(59,130,246,0.15),transparent_50%)]"></div>
         <div className="container mx-auto px-6 max-w-7xl relative z-10">
-          <Link href="/products" className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-6 font-medium transition-colors">
+          <Link href="/products" onClick={handleProductsBack} className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-6 font-medium transition-colors">
             <ArrowLeft size={18} /> {t.nav.products}
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
