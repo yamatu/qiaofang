@@ -6,9 +6,11 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"os/exec"
+	pathpkg "path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -41,6 +43,47 @@ func (h *Handler) GetCompanyInfo(c *gin.Context) {
 		"certificates_banner": certificatesBanner, "news_banner": newsBanner,
 		"contact_banner": contactBanner,
 	})
+}
+
+func (h *Handler) GetFavicon(c *gin.Context) {
+	var logoSmallURL, logoURL string
+	err := h.db.QueryRow("SELECT COALESCE(logo_small_url,''), COALESCE(logo_url,'') FROM company_info LIMIT 1").Scan(&logoSmallURL, &logoURL)
+	if err != nil && err != sql.ErrNoRows {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	iconURL := logoSmallURL
+	if iconURL == "" {
+		iconURL = logoURL
+	}
+
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate")
+	c.Header("CDN-Cache-Control", "no-store")
+	c.Header("Cloudflare-CDN-Cache-Control", "no-store")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+
+	if strings.HasPrefix(iconURL, "http://") || strings.HasPrefix(iconURL, "https://") {
+		c.Redirect(http.StatusTemporaryRedirect, iconURL)
+		return
+	}
+
+	if strings.HasPrefix(iconURL, "/uploads/") {
+		filename := filepath.Base(iconURL)
+		filePath := filepath.Join("uploads", filename)
+		if _, err := os.Stat(filePath); err == nil {
+			contentType := mime.TypeByExtension(strings.ToLower(filepath.Ext(filePath)))
+			if contentType == "" {
+				contentType = "image/png"
+			}
+			c.Header("Content-Type", contentType)
+			c.File(filePath)
+			return
+		}
+	}
+
+	c.Data(http.StatusOK, "image/svg+xml", []byte(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#2563eb"/><text x="32" y="42" text-anchor="middle" font-family="Arial, sans-serif" font-size="34" font-weight="700" fill="#fff">Q</text></svg>`))
 }
 
 func (h *Handler) UpdateCompanyInfo(c *gin.Context) {
@@ -125,7 +168,7 @@ func (h *Handler) BackupDatabase(c *gin.Context) {
 	}
 
 	cmd := exec.Command("pg_dump",
-		"-h", dbHost, "-p", dbPort, "-U", dbUser, "-d", dbName, "-f", sqlFile)
+		"-h", dbHost, "-p", dbPort, "-U", dbUser, "-d", dbName, "--clean", "--if-exists", "-f", sqlFile)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+os.Getenv("DB_PASSWORD"))
 	if output, err := cmd.CombinedOutput(); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "pg_dump failed: " + string(output)})
@@ -154,15 +197,28 @@ func createTarGz(outPath, sqlFile, uploadsDir string) error {
 	if err := addFileToTar(tw, sqlFile, "dump.sql"); err != nil {
 		return err
 	}
+	manifest := fmt.Sprintf("{\"created_at\":\"%s\",\"contents\":[\"database\",\"uploads\"]}\n", time.Now().Format(time.RFC3339))
+	if err := addTextToTar(tw, "manifest.json", manifest); err != nil {
+		return err
+	}
 	if _, err := os.Stat(uploadsDir); err == nil {
 		filepath.Walk(uploadsDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil || info.IsDir() {
 				return nil
 			}
-			return addFileToTar(tw, path, path)
+			return addFileToTar(tw, path, filepath.ToSlash(path))
 		})
 	}
 	return nil
+}
+
+func addTextToTar(tw *tar.Writer, name, content string) error {
+	header := &tar.Header{Name: name, Size: int64(len(content)), Mode: 0644, ModTime: time.Now()}
+	if err := tw.WriteHeader(header); err != nil {
+		return err
+	}
+	_, err := tw.Write([]byte(content))
+	return err
 }
 
 func addFileToTar(tw *tar.Writer, filePath, name string) error {
@@ -232,14 +288,19 @@ func (h *Handler) RestoreDatabase(c *gin.Context) {
 	pgPass := os.Getenv("DB_PASSWORD")
 
 	if strings.HasSuffix(filename, ".tar.gz") {
-		sqlFile, err := extractTarGz(backupPath)
+		sqlFile, uploadsDir, err := extractTarGz(backupPath)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "extract failed: " + err.Error()})
 			return
 		}
 		defer os.Remove(sqlFile)
+		defer os.RemoveAll(uploadsDir)
 		if err := restoreSQL(sqlFile, dbHost, dbPort, dbUser, dbName, pgPass); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		if err := replaceUploads(uploadsDir, "uploads"); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "uploads restore failed: " + err.Error()})
 			return
 		}
 	} else {
@@ -251,32 +312,49 @@ func (h *Handler) RestoreDatabase(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "restore completed"})
 }
 
-func extractTarGz(archivePath string) (string, error) {
+func extractTarGz(archivePath string) (string, string, error) {
 	f, err := os.Open(archivePath)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer f.Close()
 	gr, err := gzip.NewReader(f)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	defer gr.Close()
 	tr := tar.NewReader(gr)
 
 	var sqlFile string
+	uploadsDir, err := os.MkdirTemp("", "qiaofang_uploads_restore_*")
+	if err != nil {
+		return "", "", err
+	}
 	for {
 		header, err := tr.Next()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			return "", err
+			os.RemoveAll(uploadsDir)
+			return "", "", err
 		}
-		target := header.Name
+		target := pathpkg.Clean(strings.ReplaceAll(header.Name, "\\", "/"))
+		if target == "." || strings.HasPrefix(target, "../") || strings.HasPrefix(target, "/") {
+			continue
+		}
 		if strings.HasPrefix(target, "uploads/") {
-			os.MkdirAll(filepath.Dir(target), 0755)
-			out, err := os.Create(target)
+			relativeUpload := strings.TrimPrefix(target, "uploads/")
+			if relativeUpload == "" || strings.HasPrefix(relativeUpload, "../") {
+				continue
+			}
+			outPath := filepath.Join(uploadsDir, filepath.FromSlash(relativeUpload))
+			if header.FileInfo().IsDir() {
+				os.MkdirAll(outPath, 0755)
+				continue
+			}
+			os.MkdirAll(filepath.Dir(outPath), 0755)
+			out, err := os.Create(outPath)
 			if err != nil {
 				continue
 			}
@@ -289,10 +367,66 @@ func extractTarGz(archivePath string) (string, error) {
 			tmp.Close()
 		}
 	}
-	return sqlFile, nil
+	if sqlFile == "" {
+		os.RemoveAll(uploadsDir)
+		return "", "", fmt.Errorf("dump.sql not found in backup")
+	}
+	return sqlFile, uploadsDir, nil
+}
+
+func replaceUploads(sourceDir, targetDir string) error {
+	if sourceDir == "" {
+		return nil
+	}
+	if err := os.RemoveAll(targetDir); err != nil {
+		return err
+	}
+	if err := os.MkdirAll(targetDir, 0755); err != nil {
+		return err
+	}
+	return filepath.WalkDir(sourceDir, func(path string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		relative, err := filepath.Rel(sourceDir, path)
+		if err != nil || relative == "." {
+			return err
+		}
+		targetPath := filepath.Join(targetDir, relative)
+		if entry.IsDir() {
+			return os.MkdirAll(targetPath, 0755)
+		}
+		return copyFile(path, targetPath)
+	})
+}
+
+func copyFile(sourcePath, targetPath string) error {
+	if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
+		return err
+	}
+	source, err := os.Open(sourcePath)
+	if err != nil {
+		return err
+	}
+	defer source.Close()
+
+	target, err := os.Create(targetPath)
+	if err != nil {
+		return err
+	}
+	defer target.Close()
+
+	_, err = io.Copy(target, source)
+	return err
 }
 
 func restoreSQL(sqlFile, host, port, user, dbName, password string) error {
+	resetCmd := exec.Command("psql", "-h", host, "-p", port, "-U", user, "-d", dbName, "-c", "DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;")
+	resetCmd.Env = append(os.Environ(), "PGPASSWORD="+password)
+	if output, err := resetCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("database reset failed: %s", string(output))
+	}
+
 	cmd := exec.Command("psql", "-h", host, "-p", port, "-U", user, "-d", dbName, "-f", sqlFile)
 	cmd.Env = append(os.Environ(), "PGPASSWORD="+password)
 	output, err := cmd.CombinedOutput()

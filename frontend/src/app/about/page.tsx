@@ -50,7 +50,7 @@ const highlights = [
 export default function AboutPage() {
   const { t } = useI18n();
   usePageMeta(`${t.nav.about} - 乔方科技`, '昆山乔方电子科技有限公司 - 国家级高新技术企业');
-  const [partners, setPartners] = useState<{id:number;name:string;logo_url:string}[]>([]);
+  const [partners, setPartners] = useState<{id:number;name:string;logo_url:string;website:string}[]>([]);
   const { info: companyInfo, loaded: companyLoaded } = useCompanyInfo();
   useEffect(() => {
     let mounted = true;
@@ -61,6 +61,12 @@ export default function AboutPage() {
       mounted = false;
     };
   }, []);
+
+  const normalizeWebsite = (website?: string) => {
+    const trimmed = website?.trim();
+    if (!trimmed) return '';
+    return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  };
 
   return (
     <div className="min-h-screen bg-white">
@@ -77,7 +83,7 @@ export default function AboutPage() {
                 昆山乔方电子科技有限公司成立于2008年12月，位于昆山开发区，是一家专业从事电子元器件、精密连接器及配套线缆研发与制造的国家级高新技术企业。
               </p>
               <p className="text-gray-600 leading-relaxed mb-8">
-                公司遵循"诚信为本，质量第一，客户至上，永续经营"的管理理念，以多名10年以上技术型人才为核心的管理团队，严格按照IPC/WHMA-A-620B国际行业标准执行生产。
+                公司遵循&quot;诚信为本，质量第一，客户至上，永续经营&quot;的管理理念，以多名10年以上技术型人才为核心的管理团队，严格按照IPC/WHMA-A-620B国际行业标准执行生产。
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {highlights.map((h, i) => (
@@ -162,12 +168,33 @@ export default function AboutPage() {
           <div className="container mx-auto px-6 max-w-7xl">
             <h2 className="text-3xl font-bold text-gray-900 text-center mb-12">合作伙伴</h2>
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-              {partners.map((p, i) => (
-                <motion.div key={p.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  className="bg-white rounded-xl p-4 h-20 flex items-center justify-center border border-gray-100 hover:shadow-md transition-shadow">
-                  {p.logo_url ? <img src={getAssetUrl(p.logo_url)} alt={p.name} className="max-h-full max-w-full object-contain" /> : <span className="text-sm text-gray-500 font-medium">{p.name}</span>}
-                </motion.div>
-              ))}
+              {partners.map((p, i) => {
+                const website = normalizeWebsite(p.website);
+                const partnerContent = p.logo_url
+                  ? <img src={getAssetUrl(p.logo_url)} alt={p.name} className="max-h-full max-w-full object-contain" />
+                  : <span className="text-sm text-gray-500 font-medium">{p.name}</span>;
+
+                return (
+                  <motion.div key={p.id} initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                    className="h-20">
+                    {website ? (
+                      <a
+                        href={website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={p.name}
+                        className="bg-white rounded-xl p-4 h-full flex items-center justify-center border border-gray-100 hover:shadow-md hover:border-blue-200 transition-all"
+                      >
+                        {partnerContent}
+                      </a>
+                    ) : (
+                      <div className="bg-white rounded-xl p-4 h-full flex items-center justify-center border border-gray-100">
+                        {partnerContent}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
           </div>
         </section>

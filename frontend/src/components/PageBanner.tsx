@@ -15,7 +15,7 @@ export default function PageBanner({ title, subtitle, image }: PageBannerProps) 
   return (
     <section className="relative h-[34vh] min-h-[260px] flex items-center justify-center overflow-hidden bg-blue-900 pt-20">
       {imageUrl ? (
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${imageUrl})` }} />
+        <div data-protected-image="true" className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${imageUrl})` }} />
       ) : (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.55),transparent_34%),linear-gradient(135deg,#0f172a,#1d4ed8)]" />
       )}

@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { I18nProvider } from "@/lib/i18n";
 import FaviconSync from "@/components/FaviconSync";
+import ImageProtection from "@/components/ImageProtection";
 import SiteRefreshListener from "@/components/SiteRefreshListener";
 
 const geistSans = Geist({
@@ -38,6 +39,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <I18nProvider>
           <FaviconSync />
+          <ImageProtection />
           <SiteRefreshListener />
           {children}
         </I18nProvider>

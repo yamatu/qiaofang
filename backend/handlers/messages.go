@@ -7,19 +7,28 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type contactMessageRequest struct {
+	Name    string `json:"name"`
+	Email   string `json:"email"`
+	Phone   string `json:"phone"`
+	Company string `json:"company"`
+	Message string `json:"message"`
+}
+
 func (h *Handler) CreateMessage(c *gin.Context) {
-	var req struct {
-		Name    string `json:"name"`
-		Email   string `json:"email"`
-		Phone   string `json:"phone"`
-		Company string `json:"company"`
-		Message string `json:"message"`
+	var req contactMessageRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
-	c.ShouldBindJSON(&req)
-	h.db.Exec(
+	if _, err := h.db.Exec(
 		"INSERT INTO messages (name, email, phone, company, message) VALUES ($1,$2,$3,$4,$5)",
 		req.Name, req.Email, req.Phone, req.Company, req.Message,
-	)
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	go h.sendContactMessageEmail(req)
 	c.JSON(http.StatusOK, gin.H{"message": "received"})
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight,
@@ -24,7 +24,7 @@ export default function Home() {
   const [appsLoaded, setAppsLoaded] = useState(false);
   const [dynamicCerts, setDynamicCerts] = useState<{id:number;title:string;description:string;image_url:string}[]>([]);
   const [certsLoaded, setCertsLoaded] = useState(false);
-  const [certSlide, setCertSlide] = useState(0);
+  const certCarouselRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -72,6 +72,15 @@ export default function Home() {
 
   const safeCurrentSlide = heroSlides.length > 0 ? Math.min(currentSlide, heroSlides.length - 1) : 0;
   const heroFallbackImage = getAssetUrl(companyInfo.hero_image);
+  const scrollCertificates = (direction: 'prev' | 'next') => {
+    const carousel = certCarouselRef.current;
+    if (!carousel) return;
+    const distance = Math.max(carousel.clientWidth * 0.82, 320);
+    carousel.scrollBy({
+      left: direction === 'next' ? distance : -distance,
+      behavior: 'smooth',
+    });
+  };
 
   return (
     <div className="min-h-screen bg-white font-sans text-gray-800">
@@ -82,7 +91,7 @@ export default function Home() {
         {heroSlides.length > 0 ? (
         <AnimatePresence mode="wait">
           <motion.div key={safeCurrentSlide} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 1 }} className="absolute inset-0">
-            <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroSlides[safeCurrentSlide].image})` }}></div>
+            <div data-protected-image="true" className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroSlides[safeCurrentSlide].image})` }}></div>
             <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
             <div className="absolute inset-0 flex items-center">
               <div className="container mx-auto px-6 max-w-7xl">
@@ -104,7 +113,7 @@ export default function Home() {
         ) : (
           <div className="absolute inset-0">
             {heroFallbackImage ? (
-              <div className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroFallbackImage})` }} />
+              <div data-protected-image="true" className="absolute inset-0 bg-cover bg-center scale-105" style={{ backgroundImage: `url(${heroFallbackImage})` }} />
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-gray-950 via-gray-900 to-blue-950" />
             )}
@@ -180,7 +189,7 @@ export default function Home() {
             ) : applications.map((app, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
                 className="relative flex-1 md:hover:flex-[2.5] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.5,1)] overflow-hidden rounded-2xl group cursor-pointer border border-white/10">
-                <div className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] group-hover:scale-110" style={{ backgroundImage: `url(${app.image})` }}></div>
+                <div data-protected-image="true" className="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms] group-hover:scale-110" style={{ backgroundImage: `url(${app.image})` }}></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/50 to-transparent"></div>
                 <div className="absolute inset-0 bg-black/50 group-hover:bg-black/10 transition-colors duration-700"></div>
                 <div className="absolute bottom-0 left-0 w-full p-6 md:p-8 flex flex-col justify-end h-full">
@@ -203,52 +212,56 @@ export default function Home() {
       {/* Certifications - Carousel */}
       <section className="py-24 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-blue-50/80 to-transparent"></div>
-        <div className="container mx-auto px-6 max-w-7xl relative z-10">
-          <div className="flex flex-col lg:flex-row items-start gap-16">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full lg:w-1/3 lg:sticky lg:top-32">
+        <div className="container mx-auto px-6 max-w-[90rem] relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(240px,0.26fr)_minmax(0,1fr)] items-start gap-10 xl:gap-14">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="w-full lg:sticky lg:top-32">
               <motion.span initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-blue-600 font-semibold text-sm tracking-wider uppercase mb-3 block">Certifications</motion.span>
               <h3 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">{t.certs.title}</h3>
               <p className="text-gray-600 mb-8 leading-relaxed">{t.certs.desc}</p>
               <Link href="/certificates" className="inline-flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">
                 {t.certs.viewAll} <ArrowRight size={18} />
               </Link>
-              {certificates.length > 3 && (
+              {certificates.length > 1 && (
                 <div className="flex gap-3 mt-8">
-                  <button onClick={() => setCertSlide(Math.max(0, certSlide - 1))} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors"><ChevronLeft size={18} /></button>
-                  <button onClick={() => setCertSlide(Math.min(certificates.length - 3, certSlide + 1))} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors"><ChevronRight size={18} /></button>
+                  <button onClick={() => scrollCertificates('prev')} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors"><ChevronLeft size={18} /></button>
+                  <button onClick={() => scrollCertificates('next')} className="w-10 h-10 rounded-full border border-gray-200 flex items-center justify-center hover:bg-blue-50 hover:border-blue-300 transition-colors"><ChevronRight size={18} /></button>
                 </div>
               )}
             </motion.div>
-            <div className="w-full lg:w-2/3 overflow-hidden">
+            <div className="w-full min-w-0 overflow-hidden">
               {!certsLoaded ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <div key={i} className="h-72 rounded-2xl bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-6 animate-pulse">
-                      <div className="w-full h-40 rounded-xl bg-gray-100 mb-6"></div>
+                    <div key={i} className="h-[25rem] rounded-2xl bg-white border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-5 animate-pulse">
+                      <div className="w-full h-64 rounded-xl bg-gray-100 mb-6"></div>
                       <div className="h-5 w-2/3 rounded bg-gray-100 mx-auto mb-3"></div>
                       <div className="h-4 w-full rounded bg-gray-100"></div>
                     </div>
                   ))}
                 </div>
+              ) : certificates.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-gray-200 bg-white/70 px-6 py-16 text-center text-gray-400">
+                  暂无证书展示
+                </div>
               ) : (
-              <motion.div animate={{ x: `-${certSlide * 33.33}%` }} transition={{ type: 'spring', stiffness: 300, damping: 30 }} className="flex gap-6" style={{ width: `${Math.max(100, certificates.length * 33.33)}%` }}>
+              <div ref={certCarouselRef} className="no-scrollbar flex snap-x snap-mandatory gap-5 overflow-x-auto scroll-smooth pb-4 pr-2">
                 {certificates.map((cert, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                    className="flex-shrink-0 w-[calc(33.33%-16px)] min-w-[260px]">
-                    <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center flex flex-col items-center hover:border-blue-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 h-full">
-                      <div className="w-full h-40 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center mb-6 overflow-hidden">
+                    className="snap-start flex-none w-[82vw] sm:w-[47%] lg:w-[32%]">
+                    <div className="bg-white border border-gray-100 rounded-2xl p-4 md:p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] text-center flex flex-col items-center hover:border-blue-200 hover:shadow-xl hover:-translate-y-2 transition-all duration-300 h-full">
+                      <div className="w-full h-64 md:h-72 xl:h-80 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center mb-5 overflow-hidden">
                         {cert.image ? (
-                          <img src={`${API_BASE_URL}${cert.image}`} alt={cert.title} className="w-full h-full object-contain p-4" />
+                          <img src={getAssetUrl(cert.image)} alt={cert.title} className="w-full h-full object-contain p-2" />
                         ) : (
                           <Award size={48} className="text-blue-400" />
                         )}
                       </div>
                       <h4 className="font-bold text-gray-900 text-lg mb-2">{cert.title}</h4>
-                      <p className="text-sm text-gray-500">{cert.desc}</p>
+                      <p className="text-sm text-gray-500 line-clamp-2">{cert.desc}</p>
                     </div>
                   </motion.div>
                 ))}
-              </motion.div>
+              </div>
               )}
             </div>
           </div>

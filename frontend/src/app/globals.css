@@ -18,6 +18,22 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+.image-protection-enabled img,
+.image-protection-enabled [data-protected-image="true"] {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+  user-select: none;
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;

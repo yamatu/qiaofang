@@ -56,6 +56,7 @@ func main() {
 
 	r.Static("/uploads", "./uploads")
 	r.Static("/backups", "./backups")
+	r.GET("/favicon.ico", h.GetFavicon)
 
 	api := r.Group("/api")
 	{
@@ -69,6 +70,7 @@ func main() {
 		api.GET("/news/:id", h.GetNewsItem)
 		api.GET("/certificates", h.GetCertificates)
 		api.GET("/company", h.GetCompanyInfo)
+		api.GET("/favicon", h.GetFavicon)
 		api.GET("/categories", h.GetCategories)
 		api.GET("/partners", h.GetPartners)
 		api.GET("/applications", h.GetApplications)
@@ -110,6 +112,9 @@ func main() {
 			admin.GET("/cache/config", h.GetCacheConfig)
 			admin.PUT("/cache/config", h.SaveCacheConfig)
 			admin.POST("/cache/purge", h.PurgeCache)
+			admin.GET("/mail/config", h.GetMailConfig)
+			admin.PUT("/mail/config", h.SaveMailConfig)
+			admin.POST("/mail/test", h.SendTestMail)
 		}
 	}
 
