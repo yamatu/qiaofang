@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ChevronRight, Package } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Package } from 'lucide-react';
 import Link from 'next/link';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -20,6 +20,16 @@ interface Product {
   image_url: string;
 }
 
+type ContentSection = {
+  page_key: string;
+  section_key: string;
+  title: string;
+  subtitle: string;
+  body: string;
+  items: string[];
+  active: boolean;
+};
+
 export default function ProductsPage() {
   const { t } = useI18n();
   usePageMeta(`${t.nav.products} - 乔方科技`, '乔方科技产品中心 - RF连接器、线束、数据线等精密电子元器件');
@@ -28,18 +38,21 @@ export default function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [loaded, setLoaded] = useState(false);
+  const [contentSections, setContentSections] = useState<ContentSection[]>([]);
   const { info: companyInfo } = useCompanyInfo();
 
   useEffect(() => {
     let mounted = true;
-    Promise.all([
+    Promise.allSettled([
       api.get('/products'),
       api.get('/categories'),
-    ]).then(([productsRes, categoriesRes]) => {
+      api.get('/content-sections', { params: { page: 'products' } }),
+    ]).then(([productsRes, categoriesRes, contentRes]) => {
       if (!mounted) return;
-      const productData = (productsRes.data || []) as Product[];
+      const productData = (productsRes.status === 'fulfilled' ? productsRes.value.data || [] : []) as Product[];
       setProducts(productData);
-      const managedCategories = (categoriesRes.data || []).map((c: {name: string}) => c.name).filter(Boolean);
+      if (contentRes.status === 'fulfilled') setContentSections(contentRes.value.data || []);
+      const managedCategories = (categoriesRes.status === 'fulfilled' ? categoriesRes.value.data || [] : []).map((c: {name: string}) => c.name).filter(Boolean);
       const productCategories = productData.map(p => p.category).filter(Boolean);
       setCategories(Array.from(new Set([...managedCategories, ...productCategories])));
       const params = new URLSearchParams(window.location.search);
@@ -47,7 +60,7 @@ export default function ProductsPage() {
       const page = Number(params.get('page') || '1');
       setActiveCategory(category);
       setCurrentPage(Number.isFinite(page) && page > 0 ? page : 1);
-    }).catch(() => {}).finally(() => {
+    }).finally(() => {
       if (mounted) setLoaded(true);
     });
     return () => {
@@ -94,11 +107,54 @@ export default function ProductsPage() {
     const query = params.toString();
     return query ? `/products/${id}?${query}` : `/products/${id}`;
   };
+  const visibleContentSections = contentSections.filter(section => section.active !== false);
 
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <PageBanner title={t.products.title} subtitle={t.products.subtitle} image={companyInfo.products_banner} />
+
+      {visibleContentSections.length > 0 && (
+        <section className="bg-white py-16">
+          <div className="container mx-auto px-6 max-w-7xl">
+            <div className="mb-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold text-gray-900">专业能力概览</h2>
+                <p className="mt-3 max-w-2xl text-gray-500">来自公司简介资料的应用领域、产品系列和高速互连能力。</p>
+              </div>
+              <Link href="/contact" className="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                获取定制方案 <ChevronRight size={16} />
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+              {visibleContentSections.map((section, index) => (
+                <motion.div
+                  key={section.section_key}
+                  initial={{ opacity: 0, y: 18 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.08 }}
+                  className="rounded-2xl border border-gray-100 bg-slate-50 p-6"
+                >
+                  <span className="text-sm font-semibold text-blue-600">{section.subtitle}</span>
+                  <h3 className="mt-3 text-xl font-bold text-gray-900">{section.title}</h3>
+                  <p className="mt-4 line-clamp-4 text-sm leading-6 text-gray-600">{section.body}</p>
+                  {section.items.length > 0 && (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {section.items.map(item => (
+                        <span key={item} className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-medium text-gray-600 ring-1 ring-gray-100">
+                          <CheckCircle2 size={13} className="text-blue-500" />
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <section className="py-14 bg-slate-50">
         <div className="container mx-auto px-6 max-w-7xl">

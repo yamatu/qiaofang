@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
   Image, Package, Newspaper, Award,
-  Building2, Database, LogOut, Menu, X, MessageSquare, Tags, Handshake, AppWindow, Settings, RefreshCw, Cloud
+  Building2, Database, LogOut, Menu, X, MessageSquare, Tags, Handshake, AppWindow, Settings, RefreshCw, Cloud, FileText
 } from 'lucide-react';
 import { refreshAllSiteCache } from '@/lib/cache';
 
@@ -19,6 +19,7 @@ const sidebarLinks = [
   { name: '合作伙伴', href: '/admin/partners', icon: Handshake },
   { name: '留言管理', href: '/admin/messages', icon: MessageSquare },
   { name: '公司信息', href: '/admin/company', icon: Building2 },
+  { name: '网页内容', href: '/admin/content', icon: FileText },
   { name: '数据备份', href: '/admin/backups', icon: Database },
   { name: '缓存设置', href: '/admin/cache', icon: Cloud },
   { name: '账号设置', href: '/admin/settings', icon: Settings },
@@ -38,7 +39,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/admin/login');
       return;
     }
-    setUsername(localStorage.getItem('username') || 'Admin');
+    const timer = window.setTimeout(() => {
+      setUsername(localStorage.getItem('username') || 'Admin');
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [pathname, router]);
 
   if (pathname === '/admin/login') {

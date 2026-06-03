@@ -21,6 +21,10 @@ const timeline = [
   { year: '2017', text: '开始量产声学高精度异形连接组件，获得IATF16949车用产品体系认证' },
   { year: '2018', text: '开始量产电动滑板车防水连接组件，荣获国家级高新技术企业认证' },
   { year: '2019', text: '通过UL工厂认证' },
+  { year: '2021', text: '营业额突破2亿元' },
+  { year: '2023', text: '正式量产储能及动力电池高低压线束' },
+  { year: '2024', text: '搬入4万平方米自建厂房' },
+  { year: '2025', text: '成立服务器高速线研发团队' },
 ];
 
 const coreValues = [
@@ -47,15 +51,31 @@ const highlights = [
   '高度重视环境保护和生产安全',
 ];
 
+type ContentSection = {
+  page_key: string;
+  section_key: string;
+  title: string;
+  subtitle: string;
+  body: string;
+  items: string[];
+  active: boolean;
+};
+
 export default function AboutPage() {
   const { t } = useI18n();
   usePageMeta(`${t.nav.about} - 乔方科技`, '昆山乔方电子科技有限公司 - 国家级高新技术企业');
   const [partners, setPartners] = useState<{id:number;name:string;logo_url:string;website:string}[]>([]);
+  const [contentSections, setContentSections] = useState<ContentSection[]>([]);
   const { info: companyInfo, loaded: companyLoaded } = useCompanyInfo();
   useEffect(() => {
     let mounted = true;
-    api.get('/partners').then(r => {
-      if (mounted) setPartners(r.data || []);
+    Promise.allSettled([
+      api.get('/partners'),
+      api.get('/content-sections', { params: { page: 'about' } }),
+    ]).then(([partnersRes, contentRes]) => {
+      if (!mounted) return;
+      if (partnersRes.status === 'fulfilled') setPartners(partnersRes.value.data || []);
+      if (contentRes.status === 'fulfilled') setContentSections(contentRes.value.data || []);
     });
     return () => {
       mounted = false;
@@ -68,6 +88,19 @@ export default function AboutPage() {
     return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
   };
 
+  const sectionByKey = (key: string) => contentSections.find(section => section.section_key === key && section.active !== false);
+  const profileSection = sectionByKey('company_profile');
+  const profileParagraphs = profileSection?.body
+    ? profileSection.body.split(/\n+/).map(item => item.trim()).filter(Boolean)
+    : [
+      '昆山乔方电子科技有限公司成立于2008年12月，位于昆山开发区，是一家专业从事电子元器件、精密连接器及配套线缆研发与制造的国家级高新技术企业。',
+      '公司遵循"诚信为本，质量第一，客户至上，永续经营"的管理理念，以多名10年以上技术型人才为核心的管理团队，严格按照IPC/WHMA-A-620B国际行业标准执行生产。',
+    ];
+  const profileHighlights = profileSection?.items?.length ? profileSection.items : highlights;
+  const capabilitySections = ['core_competitiveness', 'manufacturing_capacity']
+    .map(sectionByKey)
+    .filter((section): section is ContentSection => !!section);
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
@@ -78,15 +111,15 @@ export default function AboutPage() {
         <div className="container mx-auto px-6 max-w-7xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
-              <h2 className="text-3xl font-bold text-gray-900 mb-6">企业简介</h2>
-              <p className="text-gray-600 leading-relaxed text-lg mb-6">
-                昆山乔方电子科技有限公司成立于2008年12月，位于昆山开发区，是一家专业从事电子元器件、精密连接器及配套线缆研发与制造的国家级高新技术企业。
-              </p>
-              <p className="text-gray-600 leading-relaxed mb-8">
-                公司遵循&quot;诚信为本，质量第一，客户至上，永续经营&quot;的管理理念，以多名10年以上技术型人才为核心的管理团队，严格按照IPC/WHMA-A-620B国际行业标准执行生产。
-              </p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-3">{profileSection?.title || '企业简介'}</h2>
+              {profileSection?.subtitle && <p className="mb-5 text-lg font-medium text-blue-600">{profileSection.subtitle}</p>}
+              {profileParagraphs.map((paragraph, index) => (
+                <p key={index} className={`${index === 0 ? 'text-lg' : ''} text-gray-600 leading-relaxed ${index === profileParagraphs.length - 1 ? 'mb-8' : 'mb-6'}`}>
+                  {paragraph}
+                </p>
+              ))}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {highlights.map((h, i) => (
+                {profileHighlights.map((h, i) => (
                   <div key={i} className="flex items-start gap-2 text-sm text-gray-600">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-2 flex-shrink-0"></span>
                     <span>{h}</span>
@@ -141,6 +174,43 @@ export default function AboutPage() {
           </div>
         </div>
       </section>
+
+      {capabilitySections.length > 0 && (
+        <section className="py-20">
+          <div className="container mx-auto px-6 max-w-7xl">
+            <div className="mb-12 text-center">
+              <h2 className="text-3xl font-bold text-gray-900">专业能力</h2>
+              <p className="mt-3 text-gray-500">从PPT资料同步到后台的能力说明，可在“网页内容”中维护。</p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {capabilitySections.map((section, index) => (
+                <motion.div
+                  key={section.section_key}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.1 }}
+                  className="rounded-2xl border border-gray-100 bg-white p-7 shadow-sm"
+                >
+                  <span className="text-sm font-semibold uppercase tracking-wide text-blue-600">{section.subtitle}</span>
+                  <h3 className="mt-3 text-2xl font-bold text-gray-900">{section.title}</h3>
+                  <p className="mt-4 text-gray-600 leading-7">{section.body}</p>
+                  {section.items.length > 0 && (
+                    <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {section.items.map(item => (
+                        <div key={item} className="flex items-start gap-2 text-sm text-gray-600">
+                          <span className="mt-2 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-500" />
+                          <span>{item}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Timeline */}
       <section className="py-20">
