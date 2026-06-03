@@ -59,10 +59,10 @@ export default function ProductDetailPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 pt-28 pb-32">
+      <section className="relative bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 pt-40 pb-32 md:pt-44">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(59,130,246,0.15),transparent_50%)]"></div>
         <div className="container mx-auto px-6 max-w-7xl relative z-10">
-          <Link href="/products" onClick={handleProductsBack} className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-6 font-medium transition-colors">
+          <Link href="/products" onClick={handleProductsBack} className="inline-flex items-center gap-2 text-blue-300 hover:text-white mb-8 rounded-full bg-white/10 px-4 py-2 font-medium backdrop-blur-sm transition-colors">
             <ArrowLeft size={18} /> {t.nav.products}
           </Link>
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
